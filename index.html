@@ -1,0 +1,1548 @@
+<title>Thinking Garden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap">
+<style>
+  /* Layout: one play column (max 760px) under a sticky top bar; Ollie the owl talks above every game.
+     Same family as Math Garden: soft paper ground, one soft colour per game, chunky press-down buttons.
+     Deliberately one light "picture book" look for small children. */
+  :root{
+    --bg:#FBF6EC; --card:#FFFDF8; --ink:#3E3A4F; --muted:#7E7790; --line:#ECE2CF;
+    --ok:#5DA682; --ok-m:#A2D6B8; --ok-l:#E6F5EC; --sun:#F6DB8A; --sun-d:#D2A63A; --no:#D9473C;
+    --ac:#8F7DC4; --ac-m:#CFC4EE; --ac-l:#ECE7FA;
+    --font:'Fredoka','Baloo 2','Comic Sans MS',system-ui,sans-serif;
+    color-scheme:light;
+  }
+  .t-grid{--ac:#3F8F8A;--ac-m:#A8D8D3;--ac-l:#DDF2EF}
+  .t-odd{--ac:#C08D22;--ac-m:#F5DA8C;--ac-l:#FCF2D3}
+  .t-sort{--ac:#4F8FBF;--ac-m:#A9D3EE;--ac-l:#DEEEF8}
+  .t-pat{--ac:#D27A50;--ac-m:#F6C2A2;--ac-l:#FDE7D9}
+  .t-seq{--ac:#B8689B;--ac-m:#EBC3DF;--ac-l:#F8E6F2}
+  .t-code{--ac:#4E9A72;--ac-m:#A2D6B8;--ac-l:#DDF1E5}
+  .t-talk{--ac:#8070BD;--ac-m:#CFC4EE;--ac-l:#ECE7FA}
+  .t-calm{--ac:#4F8FBF;--ac-m:#A9D3EE;--ac-l:#E3F1FB}
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  [hidden]{display:none!important}
+  html,body{margin:0}
+  body{font-family:var(--font);color:var(--ink);min-height:100%;
+    background:radial-gradient(circle at 6% 0%,#FFF0D2 0,transparent 36%),radial-gradient(circle at 100% 100%,#E8E3F7 0,transparent 42%),var(--bg);
+    background-attachment:fixed}
+  button{font-family:inherit;color:inherit;border:none;cursor:pointer;position:relative;background:none;padding:0}
+  button:focus-visible{outline:4px solid #5E9ECB;outline-offset:3px}
+
+  /* ---------- top bar ---------- */
+  .topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;display:flex;align-items:center;gap:8px;padding:8px 16px;
+    background:rgba(251,246,236,.95);backdrop-filter:blur(6px);border-bottom:2px solid #F0E6D3}
+  .spacer{flex:1}
+  .brand{font-size:clamp(20px,4.6vw,26px);font-weight:700;color:var(--ac);white-space:nowrap}
+  .icon-btn{width:48px;height:48px;border-radius:16px;background:var(--card);font-size:23px;box-shadow:0 4px 0 var(--line);flex-shrink:0}
+  .icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+  .title-pill{display:flex;align-items:center;gap:8px;font-size:clamp(17px,4.2vw,23px);font-weight:700;white-space:nowrap;min-width:0}
+  #titleText{overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .t-badge{width:40px;height:40px;border-radius:50%;background:var(--ac-l);border:3px solid var(--ac);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .stars{background:var(--sun);padding:7px 14px;border-radius:999px;font-weight:700;font-size:19px;box-shadow:0 4px 0 var(--sun-d);white-space:nowrap}
+  .flowers{display:flex;gap:1px;font-size:17px;flex-shrink:0}
+  .flowers span{opacity:.55}
+  .flowers span.on{opacity:1;animation:popIn .5s}
+
+  main{max-width:760px;margin:0 auto;padding:10px 16px 64px}
+  .screen{display:none}
+  .screen.active{display:block;animation:fadeIn .35s}
+
+  /* ---------- Ollie ---------- */
+  .owl-row{display:flex;align-items:center;gap:10px;margin:4px 0 12px}
+  .owl{font-size:clamp(46px,10vw,60px);line-height:1;flex-shrink:0;animation:bob 3s ease-in-out infinite}
+  .owl.talk{animation:talk .5s ease-in-out 3}
+  .bubble{position:relative;flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:var(--card);border-radius:24px;padding:10px 10px 10px 16px;
+    font-size:clamp(18px,4.2vw,23px);line-height:1.3;box-shadow:0 4px 0 var(--line);border:3px solid var(--ac-m);min-height:64px}
+  .bubble::before{content:'';position:absolute;left:-14px;top:50%;margin-top:-11px;border-style:solid;border-width:11px 14px 11px 0;border-color:transparent var(--ac-m) transparent transparent}
+  #say{flex:1;min-width:0}
+  .bubble b{color:var(--ac)}
+  .replay{width:46px;height:46px;border-radius:50%;background:var(--ac-l);font-size:21px;flex-shrink:0}
+
+  /* ---------- shared pieces ---------- */
+  .card{background:var(--card);border-radius:28px;padding:16px 12px;box-shadow:0 5px 0 var(--line);border:2px solid #F1E7D5;margin-bottom:14px}
+  .lvl-row{display:flex;justify-content:center;margin-bottom:10px}
+  .lvl{font-size:15px;font-weight:600;color:var(--ac);background:var(--ac-l);border:2px solid var(--ac-m);border-radius:999px;padding:4px 14px}
+  .ask{text-align:center;font-size:clamp(19px,4.6vw,22px);font-weight:600;color:var(--muted);margin:4px 0 8px}
+  .footer{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:14px 0 4px}
+  .btn{font-size:clamp(19px,4vw,22px);font-weight:600;padding:12px 22px;border-radius:22px;min-height:60px;background:var(--bgc,#fff);box-shadow:0 5px 0 var(--sh,var(--line));transition:transform .1s}
+  .btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--sh,var(--line))}
+  .btn-help{--bgc:var(--ac-l);--sh:var(--ac-m)}
+  .btn-next{--bgc:var(--ok-m);--sh:var(--ok);font-size:26px;padding:12px 34px}
+  .btn-hard{--bgc:#FCE6B8;--sh:#D9A93A;font-size:22px}
+  .choices{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:6px 0 4px}
+  .choice{width:clamp(88px,23vw,112px);aspect-ratio:1;border-radius:28px;font-size:clamp(44px,11vw,60px);background:var(--bgc);box-shadow:0 7px 0 var(--sh);transition:opacity .3s,transform .2s;line-height:1}
+  .choice:active{transform:translateY(5px);box-shadow:0 2px 0 var(--sh)}
+  .choice.tried{opacity:.3;transform:scale(.9)}
+  .choice.right{--bgc:var(--ok-m)!important;--sh:var(--ok)!important;animation:pop .5s}
+  .reasons{display:flex;flex-direction:column;gap:10px;max-width:480px;margin:6px auto 0}
+  .reason{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:20px;background:#fff;border:3px solid var(--line);box-shadow:0 4px 0 var(--line);
+    font-size:clamp(18px,4.5vw,22px);font-weight:600;text-align:left;transition:opacity .3s,background .3s}
+  .reason:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+  .reason .ri{font-size:30px;flex-shrink:0;width:38px;text-align:center}
+  .reason.lit{border-color:var(--sun-d);background:#FFF7DA}
+  .reason.right{border-color:var(--ok);background:var(--ok-l)}
+  .reason.tried{opacity:.35}
+  .result{background:var(--ok-l);border:3px solid var(--ok-m);border-radius:26px;padding:14px 12px;text-align:center}
+  .res-line{font-size:clamp(21px,5vw,26px);font-weight:600}
+  .res-line b{color:var(--ok)}
+  .res-rep{font-size:clamp(17px,4.2vw,20px);color:var(--ink);margin-top:8px}
+  .grow-line{font-size:17px;font-weight:600;color:#2F6E9B;background:#E3F1FB;border-radius:14px;padding:6px 10px;margin-top:10px}
+  .stage-up{font-size:17px;font-weight:600;color:#8C6A12;background:#FCF2D3;border-radius:14px;padding:6px 10px;margin-top:10px}
+  .next-q{font-size:17px;color:var(--muted);margin-top:10px}
+  .calm-chip{display:block;margin:12px auto 0;padding:10px 18px;border-radius:999px;background:#E3F1FB;border:2px solid #A9D3EE;font-size:18px;font-weight:600;color:#2F6E9B}
+  .shake{animation:shake .45s}
+  .glow{animation:glow 1.4s ease-in-out infinite}
+  .hand{position:absolute;right:-14px;bottom:-24px;font-size:38px;pointer-events:none;z-index:6;animation:tapHint 1s ease-in-out infinite;filter:drop-shadow(0 2px 2px rgba(0,0,0,.18))}
+
+  /* ---------- home ---------- */
+  .sec-title{font-size:21px;margin:6px 4px 10px;display:flex;align-items:center;gap:8px}
+  .menu{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .menu + .sec-title{margin-top:22px}
+  .mcard{border-radius:28px;padding:16px 10px 14px;text-align:center;background:var(--ac-l);box-shadow:0 7px 0 var(--ac);border:3px solid var(--ac-m);transition:transform .15s}
+  .mcard:hover{transform:translateY(-3px)}
+  .mcard:active{transform:translateY(5px);box-shadow:0 2px 0 var(--ac)}
+  .mcard.wide{grid-column:1/-1;display:flex;align-items:center;gap:16px;text-align:left;padding:14px 18px}
+  .mc-sym{width:72px;height:72px;margin:0 auto 8px;border-radius:50%;background:#fff;border:4px solid var(--ac);font-size:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1}
+  .wide .mc-sym{margin:0}
+  .mcard .label{font-size:clamp(20px,4.8vw,26px);font-weight:700;line-height:1.15}
+  .mcard .sub{font-size:14px;color:var(--muted);margin-top:4px;font-weight:500}
+  .tree-card{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:22px}
+  .tree-big{position:relative;width:118px;height:118px;flex-shrink:0;border-radius:50%;background:radial-gradient(circle at 50% 70%,#E2F2D8 0,#F4F9EC 60%,transparent 61%);
+    display:flex;align-items:center;justify-content:center;font-size:76px;line-height:1}
+  .tree-big .deco{position:absolute;font-size:22px}
+  .tree-info{flex:1;min-width:200px}
+  .tree-info h3{margin:0;font-size:21px}
+  .tree-info p{margin:4px 0 8px;color:var(--muted);font-size:16px;line-height:1.35}
+  .bar{height:14px;border-radius:7px;background:#EEE5D3;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#A2D6B8,#5DA682);border-radius:7px;transition:width .6s}
+  .tstats{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .tstat{font-size:14px;font-weight:600;background:#F5EFE2;border-radius:999px;padding:4px 10px}
+  .stickerbook{text-align:center}
+  .stickerbook h3{margin:0 0 8px;font-size:21px}
+  #stickerList{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-size:36px;min-height:44px}
+  #stickerList .empty{font-size:16px;color:var(--muted)}
+
+  /* ---------- Animal Houses (logic grid) ---------- */
+  .rules{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px}
+  .rule{display:flex;align-items:center;gap:6px;background:var(--ac-l);border:2px solid var(--ac-m);border-radius:999px;padding:5px 12px;font-size:clamp(15px,3.8vw,18px);font-weight:600}
+  .rule .rs{font-size:20px;letter-spacing:1px}
+  .lgrid{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:6px;width:min(100%,var(--w,300px));margin:0 auto;padding:8px;background:#CFE8C6;border-radius:22px;border:4px solid #9CCB8D}
+  .lcell{aspect-ratio:1;border-radius:16px;background:#FFFDF8;display:flex;align-items:center;justify-content:center;font-size:clamp(30px,9vw,48px);line-height:1;transition:background .25s,box-shadow .25s}
+  .lcell.blank{border:3px dashed var(--ac);color:var(--muted);font-size:clamp(22px,6vw,32px);font-weight:700;background:#fff}
+  .lcell.hl{background:#FFF1C2}
+  .lcell.blank.hl{background:#FFF8DD}
+  .lcell.sel{box-shadow:0 0 0 5px var(--sun-d);border-style:solid}
+  .lcell.filled{background:var(--ok-l);border:3px solid var(--ok);animation:pop .4s}
+  .lcell.clash{box-shadow:0 0 0 5px var(--no);animation:shake .45s}
+
+  /* ---------- Patterns ---------- */
+  .pat-row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;row-gap:10px;padding:4px 0}
+  .pat-row.letters{row-gap:30px;padding-bottom:22px}
+  .tile{width:clamp(46px,11.5vw,64px);aspect-ratio:1;border-radius:16px;background:#fff;border:3px solid var(--line);font-size:clamp(26px,7vw,40px);
+    display:flex;align-items:center;justify-content:center;position:relative;line-height:1;transition:transform .2s,box-shadow .2s,background .3s}
+  .tile.q{border-style:dashed;border-color:var(--ac);color:var(--muted);font-weight:700}
+  .tile.ca{background:#FDE7D9;border-color:#F6C2A2}
+  .tile.cb{background:#DEEEF8;border-color:#A9D3EE}
+  .tile.lit{transform:translateY(-7px);box-shadow:0 0 0 4px var(--sun)}
+  .tile.bug{background:#FDE3E0;border-color:var(--no)}
+  .tile.bug::before{content:'🐞';position:absolute;top:-14px;right:-10px;font-size:20px}
+  .tile.fixed{background:var(--ok-l);border-color:var(--ok);animation:pop .5s}
+  .tile .let{position:absolute;bottom:-27px;left:0;right:0;text-align:center;font-size:17px;font-weight:700}
+  .let.A{color:#D27A50}.let.B{color:#4F8FBF}.let.C{color:#4E9A72}
+  .pat-hint{text-align:center;font-size:16px;color:var(--muted);margin-top:10px}
+
+  /* ---------- Odd one out ---------- */
+  .odd-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:400px;margin:0 auto}
+  .otile{aspect-ratio:1;border-radius:26px;background:#fff;border:4px solid var(--ac-m);box-shadow:0 6px 0 var(--ac-m);font-size:clamp(52px,14vw,78px);line-height:1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:opacity .3s}
+  .otile small{font-size:clamp(14px,3.6vw,17px);color:var(--muted);font-weight:600}
+  .otile:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ac-m)}
+  .otile.picked{border-color:var(--ac);background:var(--ac-l);box-shadow:0 6px 0 var(--ac)}
+  .otile.group{border-color:var(--ok);box-shadow:0 6px 0 var(--ok);background:var(--ok-l)}
+  .otile.quiet{opacity:.5}
+
+  /* ---------- Code the bunny ---------- */
+  .board{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:5px;width:min(100%,340px);margin:0 auto;padding:8px;background:#BFE3B4;border-radius:22px;border:4px solid #8CC77E}
+  .bcell{aspect-ratio:1;border-radius:12px;background:#DDF2D3;display:grid;place-items:center;font-size:clamp(24px,7vw,38px);line-height:1;position:relative}
+  .bcell > *{grid-area:1/1}
+  .bcell.rock{background:#D7D0C3}
+  .bcell.home{box-shadow:inset 0 0 0 3px #A8D69B}
+  .bcell .foot{font-size:.5em;opacity:.75}
+  .bunny{position:relative;z-index:3}
+  .bunny.yum{animation:pop .6s}
+  .carrot{transition:opacity .4s}
+  .prog-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:19px;font-weight:700;color:var(--ac);margin:0 0 8px 4px}
+  .prog-head small{font-size:14px;color:var(--muted);font-weight:500}
+  .prog{display:flex;flex-wrap:wrap;gap:8px;min-height:62px;padding:8px;border-radius:18px;background:#fff;border:3px dashed var(--line);align-items:center}
+  .prog:empty::before{content:'Tap the arrows to make a plan';color:var(--muted);font-size:17px;padding-left:6px}
+  .pcard{width:46px;height:46px;border-radius:13px;background:var(--ac-l);border:3px solid var(--ac);font-size:28px;font-weight:700;color:var(--ac);
+    display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s;line-height:1}
+  .pcard.now{transform:translateY(-5px);box-shadow:0 0 0 4px var(--sun)}
+  .pcard.bug{background:#FDE3E0;border-color:var(--no);color:var(--no)}
+  .pcard.bug::after{content:'🐞';position:absolute;top:-13px;right:-10px;font-size:18px}
+  .pad{display:grid;grid-template-columns:repeat(3,70px);grid-template-rows:70px 70px;gap:8px;justify-content:center;margin-top:14px}
+  .arw{border-radius:20px;font-size:40px;font-weight:700;background:#fff;border:3px solid var(--ac-m);box-shadow:0 5px 0 var(--ac-m);color:var(--ac);line-height:1}
+  .arw:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ac-m)}
+  .arw[data-d="U"]{grid-column:2;grid-row:1}.arw[data-d="L"]{grid-column:1;grid-row:2}.arw[data-d="D"]{grid-column:2;grid-row:2}.arw[data-d="R"]{grid-column:3;grid-row:2}
+  .pad2{display:flex;gap:12px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+  .btn-go{--bgc:var(--ok-m);--sh:var(--ok);font-size:26px;padding:12px 32px}
+  .btn-undo{--bgc:var(--card);--sh:var(--line);color:var(--muted)}
+  .plan-show{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px}
+
+  /* ---------- Sort it ---------- */
+  .sort-stage{min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+  .sort-item{font-size:84px;line-height:1;min-height:90px;display:flex;align-items:center}
+  .sort-item.small{font-size:34px}
+  .sort-left{font-size:15px;color:var(--muted);font-weight:600}
+  .baskets{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+  .basket{min-height:150px;border-radius:24px 24px 46px 46px;background:#F7E3C4;border:4px solid #D9B68B;box-shadow:0 6px 0 #C9A270;padding:10px 6px 14px;
+    display:flex;flex-direction:column;align-items:center;gap:8px;transition:box-shadow .2s}
+  .basket:active{transform:translateY(4px);box-shadow:0 2px 0 #C9A270}
+  .blabel{display:flex;align-items:center;gap:6px;font-size:clamp(16px,4.2vw,21px);font-weight:700;background:#fff;border-radius:999px;padding:4px 12px;max-width:100%}
+  .blabel .bi{font-size:26px;line-height:1}
+  .bitems{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;font-size:30px;line-height:1.1}
+  .bitems .sm{font-size:17px;align-self:flex-end}
+  .bitems .bg{font-size:38px}
+
+  /* ---------- What comes first ---------- */
+  .slots{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:8px;max-width:520px;margin:0 auto}
+  .slot{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .slab{font-size:15px;font-weight:700;color:var(--ac)}
+  .sbox{width:100%;aspect-ratio:1;border-radius:20px;border:3px dashed var(--ac-m);background:#fff;display:flex;align-items:center;justify-content:center;font-size:clamp(34px,10vw,56px);line-height:1;transition:box-shadow .3s}
+  .sbox.filled{border-style:solid;border-color:var(--ac);background:var(--ac-l);animation:pop .4s}
+  .slot.lit .sbox{box-shadow:0 0 0 5px var(--sun)}
+  .scap{font-size:14px;color:var(--muted);text-align:center;min-height:18px;line-height:1.2}
+  .seq-tray{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:6px}
+  .scard{width:clamp(84px,22vw,108px);aspect-ratio:1;border-radius:22px;background:#fff;border:3px solid var(--line);box-shadow:0 6px 0 var(--line);font-size:clamp(40px,11vw,56px);line-height:1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+  .scard small{font-size:13px;color:var(--muted);font-weight:600;line-height:1.1;padding:0 4px}
+  .scard:active{transform:translateY(4px);box-shadow:0 2px 0 var(--line)}
+  .scard.used{visibility:hidden}
+
+  /* ---------- Big questions ---------- */
+  .talk-card{text-align:center}
+  .talk-pic{font-size:clamp(76px,20vw,100px);line-height:1.1}
+  .talk-q{font-size:clamp(23px,5.8vw,30px);font-weight:700;margin-top:6px;text-wrap:balance}
+  .votes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:480px;margin:0 auto}
+  .vote{border-radius:24px;padding:12px 4px;font-size:42px;line-height:1.1;background:#fff;border:3px solid var(--line);box-shadow:0 5px 0 var(--line);display:flex;flex-direction:column;align-items:center;gap:2px}
+  .vote span{font-size:17px;font-weight:600}
+  .vote.chosen{border-color:var(--ac);background:var(--ac-l);box-shadow:0 5px 0 var(--ac)}
+  .talk-more{margin-top:14px}
+  .talk-more h4{margin:0 0 8px;font-size:19px;color:var(--ac)}
+  .whatif{background:#FFF7DA;border:2px dashed #F2C95C;border-radius:18px;padding:10px 14px;font-size:clamp(18px,4.4vw,21px);margin-top:12px;text-align:left}
+  .talk-note{font-size:15px;color:var(--muted);margin-top:10px;text-align:center}
+
+  /* ---------- celebration & dialogs ---------- */
+  .praise{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font-size:clamp(22px,5.6vw,34px);font-weight:700;background:var(--card);max-width:92vw;text-align:center;
+    padding:14px 24px;border-radius:30px;box-shadow:0 8px 0 var(--sun-d);border:4px solid var(--sun);z-index:60;pointer-events:none;animation:praise 1.8s forwards}
+  .confetti{position:fixed;top:-24px;width:12px;height:16px;border-radius:4px;z-index:50;pointer-events:none;animation:fall 1.8s ease-in forwards}
+  .modal{position:fixed;inset:0;background:rgba(62,58,79,.38);display:flex;align-items:center;justify-content:center;z-index:80;padding:16px}
+  .sheet{background:var(--card);border-radius:30px;padding:22px 18px;max-width:500px;width:100%;text-align:center;animation:popIn .35s;max-height:92vh;overflow:auto}
+  .sheet h2{margin:0 0 6px;font-size:26px}
+  .sheet p{margin:0 0 14px;color:var(--muted);font-size:17px}
+  .sticker-big{font-size:118px;line-height:1.1;animation:spinIn .8s ease-out}
+  .breath{height:230px;display:flex;align-items:center;justify-content:center}
+  .bcircle{width:104px;height:104px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#F1F8FD,#A9D3EE);display:flex;align-items:center;justify-content:center;font-size:48px;
+    box-shadow:0 0 0 10px rgba(169,211,238,.25);transition:transform 4s ease-in-out}
+  .bcircle.in{transform:scale(1.85)}
+  .btext{font-size:clamp(21px,5vw,25px)!important;color:var(--ink)!important;font-weight:600;min-height:62px}
+  .settings{text-align:left}
+  .sheet-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+  .sheet-head .sub{color:var(--muted);font-size:16px}
+  .close-x{width:44px;height:44px;border-radius:50%;background:#F3ECDF;font-size:20px;color:var(--muted);flex-shrink:0}
+  .set-card{background:#FBF6EC;border:2px solid #F1E7D5;border-radius:20px;padding:14px;margin-bottom:12px}
+  .set-title{font-size:19px;font-weight:600;margin-bottom:10px}
+  .seg{display:grid;grid-template-columns:repeat(3,1fr);background:#fff;border:2px solid var(--line);border-radius:16px;padding:4px;gap:4px}
+  .seg button{font-size:19px;font-weight:700;padding:10px 0;border-radius:12px;color:var(--muted)}
+  .seg button.active{background:#8070BD;color:#fff;box-shadow:0 3px 0 #5E5099}
+  .set-note{text-align:center;font-size:15px;color:var(--muted);margin-top:8px}
+  .switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}
+  .switch-row b{display:block;font-size:17px;font-weight:600}
+  .switch-row small{display:block;font-size:14px;color:var(--muted);margin-top:2px}
+  .switch{appearance:none;-webkit-appearance:none;width:58px;height:34px;border-radius:17px;background:#DDD5C6;position:relative;flex-shrink:0;cursor:pointer;transition:background .2s;margin:0}
+  .switch::before{content:'';position:absolute;top:4px;left:4px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 3px rgba(0,0,0,.2);transition:transform .2s}
+  .switch:checked{background:var(--ok)}
+  .switch:checked::before{transform:translateX(24px)}
+  .link-btn{margin-top:12px;font-size:15px;color:var(--muted);text-decoration:underline;padding:4px 0}
+  .link-btn.armed{color:#C46A5A;text-decoration:none;font-weight:600}
+  .method{font-size:16px;line-height:1.45}
+  .method summary{font-size:18px;font-weight:600;cursor:pointer}
+  .method ul{padding-left:20px;margin:8px 0 0}
+  .method li{margin-bottom:7px}
+  .settings .btn-next{display:block;margin:14px auto 2px}
+
+  @media (max-width:420px){
+    .icon-btn{width:44px;height:44px;font-size:21px}
+    .topbar{gap:6px;padding:8px 12px}
+    .flowers{font-size:12px;gap:0}
+    .pad{grid-template-columns:repeat(3,64px);grid-template-rows:64px 64px}
+  }
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  @keyframes talk{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+  @keyframes popIn{0%{transform:scale(0);opacity:0}70%{transform:scale(1.1);opacity:1}100%{transform:scale(1);opacity:1}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+  @keyframes glow{0%,100%{box-shadow:0 0 0 3px rgba(242,201,92,.95)}50%{box-shadow:0 0 0 10px rgba(242,201,92,.3)}}
+  @keyframes tapHint{0%,100%{transform:translate(0,0)}50%{transform:translate(-6px,-10px)}}
+  @keyframes praise{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}30%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%)}}
+  @keyframes fall{to{transform:translateY(110vh) rotate(600deg)}}
+  @keyframes spinIn{0%{transform:scale(0) rotate(-200deg)}70%{transform:scale(1.15) rotate(10deg)}100%{transform:scale(1) rotate(0)}}
+  @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+
+<header class="topbar">
+  <button class="icon-btn" id="homeBtn" aria-label="Home" hidden>🏠</button>
+  <div class="brand" id="brand">🧠 Thinking Garden</div>
+  <div class="title-pill" id="titlePill" hidden><span class="t-badge" id="titleSym"></span><span id="titleText"></span></div>
+  <div class="spacer"></div>
+  <div class="flowers" id="flowers" hidden aria-label="Flowers to the next sticker"></div>
+  <div class="stars" id="stars" aria-label="Stars">⭐ <span id="starCount">0</span></div>
+  <button class="icon-btn" id="soundBtn" aria-label="Sound on or off">🔊</button>
+  <button class="icon-btn" id="gearBtn" aria-label="Grown-up settings">⚙️</button>
+</header>
+
+<main>
+  <div class="owl-row">
+    <button class="owl" id="owl" aria-label="Hear Ollie again">🦉</button>
+    <div class="bubble"><span id="say"></span><button class="replay" id="replay" aria-label="Listen again">🔊</button></div>
+  </div>
+
+  <!-- ================= HOME ================= -->
+  <section id="home" class="screen active">
+    <h2 class="sec-title">🔍 Think it through</h2>
+    <div class="menu">
+      <button class="mcard t-grid" data-go="grid"><div class="mc-sym">🏡</div><div class="label">Animal Houses</div><div class="sub">One of each rule</div></button>
+      <button class="mcard t-odd" data-go="odd"><div class="mc-sym">🤔</div><div class="label">Odd One Out</div><div class="sub">Say why</div></button>
+      <button class="mcard t-sort wide" data-go="sort"><div class="mc-sym">🧺</div><div><div class="label">Sort It</div><div class="sub">Find the rule, then sort</div></div></button>
+    </div>
+    <h2 class="sec-title">🧩 Plan &amp; find the rule</h2>
+    <div class="menu">
+      <button class="mcard t-pat" data-go="pat"><div class="mc-sym">🔁</div><div class="label">Patterns</div><div class="sub">What repeats?</div></button>
+      <button class="mcard t-seq" data-go="seq"><div class="mc-sym">🐣</div><div class="label">What First?</div><div class="sub">Put it in order</div></button>
+      <button class="mcard t-code wide" data-go="code"><div class="mc-sym">🐰</div><div><div class="label">Code the Bunny</div><div class="sub">Plan steps, fix the bugs</div></div></button>
+    </div>
+    <h2 class="sec-title">💛 Heart &amp; mind</h2>
+    <div class="menu">
+      <button class="mcard t-talk" data-go="talk"><div class="mc-sym">💬</div><div class="label">Big Questions</div><div class="sub">Talk together</div></button>
+      <button class="mcard t-calm" id="calmHome"><div class="mc-sym">🫧</div><div class="label">Calm Breath</div><div class="sub">When it feels hard</div></button>
+    </div>
+
+    <div class="card tree-card" id="treeCard">
+      <div class="tree-big" id="treeBig">🌰</div>
+      <div class="tree-info">
+        <h3 id="treeName">My thinking tree</h3>
+        <p>Every puzzle helps it grow. When you keep trying after a mistake, it grows even more!</p>
+        <div class="bar"><i id="treeBar"></i></div>
+        <div class="tstats" id="treeStats"></div>
+      </div>
+    </div>
+    <div class="card stickerbook" id="stickerBook"><h3>🏅 My stickers</h3><div id="stickerList"></div></div>
+  </section>
+
+  <!-- ================= ANIMAL HOUSES (picture logic grid) ================= -->
+  <section id="grid" class="screen" data-key="grid">
+    <div class="card"><div class="rules" id="gridRules"></div><div class="lgrid" id="gridBoard"></div></div>
+    <div id="gridPickWrap" hidden><div class="ask" id="gridAsk"></div><div class="choices" id="gridChoices"></div></div>
+  </section>
+
+  <!-- ================= ODD ONE OUT ================= -->
+  <section id="odd" class="screen" data-key="odd">
+    <div class="card"><div class="odd-grid" id="oddGrid"></div></div>
+    <div id="oddWhyWrap" hidden><div class="ask">Why doesn't it belong? 🤔</div><div class="reasons" id="oddReasons"></div></div>
+  </section>
+
+  <!-- ================= SORT IT ================= -->
+  <section id="sort" class="screen" data-key="sort">
+    <div class="card">
+      <div class="sort-stage"><div class="sort-item" id="sortItem"></div><div class="sort-left" id="sortLeft"></div></div>
+      <div class="baskets">
+        <button class="basket" id="sortB0"><div class="blabel"></div><div class="bitems"></div></button>
+        <button class="basket" id="sortB1"><div class="blabel"></div><div class="bitems"></div></button>
+      </div>
+    </div>
+    <div id="sortRuleWrap" hidden><div class="ask">What was the secret rule? 🤫</div><div class="reasons" id="sortRules"></div></div>
+  </section>
+
+  <!-- ================= PATTERNS ================= -->
+  <section id="pat" class="screen" data-key="pat">
+    <div class="card"><div class="pat-row" id="patRow"></div><div class="pat-hint" id="patHint"></div></div>
+    <div id="patAskWrap"><div class="ask" id="patAsk"></div><div class="choices" id="patChoices"></div></div>
+  </section>
+
+  <!-- ================= WHAT FIRST ================= -->
+  <section id="seq" class="screen" data-key="seq">
+    <div class="card"><div class="slots" id="seqSlots"></div></div>
+    <div id="seqAskWrap"><div class="ask" id="seqAsk"></div><div class="seq-tray" id="seqTray"></div></div>
+  </section>
+
+  <!-- ================= CODE THE BUNNY ================= -->
+  <section id="code" class="screen" data-key="code">
+    <div class="card"><div class="board" id="cbBoard"></div></div>
+    <div class="card">
+      <div class="prog-head">📝 My plan <small>tap a step to take it away</small></div>
+      <div class="prog" id="cbProg"></div>
+      <div class="pad">
+        <button class="arw" data-d="U" aria-label="Up">↑</button>
+        <button class="arw" data-d="L" aria-label="Left">←</button>
+        <button class="arw" data-d="D" aria-label="Down">↓</button>
+        <button class="arw" data-d="R" aria-label="Right">→</button>
+      </div>
+      <div class="pad2"><button class="btn btn-undo" id="cbUndo">↩ Undo</button><button class="btn btn-go" id="cbGo">▶ Go!</button></div>
+    </div>
+  </section>
+
+  <!-- ================= BIG QUESTIONS ================= -->
+  <section id="talk" class="screen" data-key="talk">
+    <div class="card talk-card"><div class="talk-pic" id="talkPic"></div><div class="talk-q" id="talkQ"></div></div>
+    <div class="votes" id="talkVotes">
+      <button class="vote" data-v="yes">👍<span>Yes</span></button>
+      <button class="vote" data-v="no">👎<span>No</span></button>
+      <button class="vote" data-v="unsure">🤔<span>Not sure</span></button>
+    </div>
+    <div class="card talk-more" id="talkMore" hidden>
+      <h4>💬 Say your reason. Tap to hear:</h4>
+      <div class="reasons" id="talkStarters"></div>
+      <div class="whatif" id="talkWhatIf"></div>
+      <div class="footer"><button class="btn btn-next" id="talkDone">✓ We talked about it</button></div>
+      <div class="talk-note">There is no wrong answer. Good thinkers give reasons and listen to others.</div>
+    </div>
+  </section>
+</main>
+
+<!-- Calm breath -->
+<div class="modal" id="calm" hidden>
+  <div class="sheet" role="dialog" aria-label="Calm breath">
+    <h2>🫧 Calm breath</h2>
+    <p>Feeling stuck is okay. Stuck means your brain is learning.</p>
+    <div class="breath"><div class="bcircle" id="bCircle">🌸</div></div>
+    <p class="btext" id="bText"></p>
+    <button class="btn btn-next" id="calmDone">I'm ready 💪</button>
+  </div>
+</div>
+
+<!-- Sticker -->
+<div class="modal" id="stickerModal" hidden>
+  <div class="sheet">
+    <h2>🎉 A new sticker!</h2>
+    <div class="sticker-big" id="stickerBig">🦄</div>
+    <p>It's in your sticker book.</p>
+    <button class="btn btn-next" id="stickerOk">Yay! ✓</button>
+  </div>
+</div>
+
+<!-- Grown-up settings -->
+<div class="modal" id="settings" hidden>
+  <div class="sheet settings" role="dialog" aria-label="Settings">
+    <div class="sheet-head">
+      <div><h2>⚙️ Settings</h2><div class="sub">For grown-ups</div></div>
+      <button class="close-x" id="settingsClose" aria-label="Close without saving">✕</button>
+    </div>
+    <div class="set-card">
+      <div class="set-title">🎂 Start puzzles for age</div>
+      <div class="seg" id="ageSeg"><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button></div>
+      <div class="set-note">After that, each game adjusts by itself: 3 right in a row → trickier, stuck twice → easier.</div>
+    </div>
+    <div class="set-card">
+      <label class="switch-row"><span><b>⭐ Stars, flowers &amp; stickers</b><small>Off = play just for the fun of thinking</small></span><input type="checkbox" class="switch" id="rewardsToggle"></label>
+      <button class="link-btn" id="resetBtn">↺ Reset progress</button>
+    </div>
+    <details class="set-card method" open>
+      <summary>📘 How Thinking Garden teaches</summary>
+      <ul>
+        <li><b>Computational thinking</b> (ScratchJr, KIBO "Coding as Another Language", CS Unplugged): <i>Patterns</i>, <i>What First?</i> and <i>Code the Bunny</i> practise sequencing, finding rules, planning steps and <b>debugging</b>. Studies with 4–6 year olds show these skills grow with short, playful practice.</li>
+        <li><b>Deductive reasoning:</b> <i>Animal Houses</i> is a picture logic grid (a child's Sudoku) with one clear rule: one of each animal in every row, then in every column too. Your child learns to start where they can be <b>sure</b> and to explain it: "This row has a cat and a dog, so it must be the bunny." Picking something that could fit but isn't certain gets the message "we can't be sure yet", which separates guessing from knowing.</li>
+        <li><b>Philosophy for Children (P4C):</b> <i>Odd One Out</i> always asks <b>"why?"</b>, and <i>Big Questions</i> is a mini "community of inquiry" at home. There are no wrong answers, but reasons matter. Ask: "How do you know?" "Can you think of another reason?"</li>
+        <li><b>Concrete → pictorial → abstract</b> (Singapore approach): pictures first, then pattern letters like A B A B, and sorting rules that become hidden "secret rules".</li>
+        <li><b>Resilience &amp; growth mindset</b> (Carol Dweck): Ollie praises strategies and persistence, never "smart". Mistakes are "not yet", bugs are normal, choosing <b>💪 Trickier</b> is praised as brave, and the thinking tree grows extra when your child keeps going after a mistake.</li>
+        <li><b>Calm breath:</b> after two misses Ollie offers a breathing break, because a calm body helps a thinking brain.</li>
+        <li><b>Best way to play:</b> together, 10–15 minutes. Ask your child to explain their thinking out loud.</li>
+      </ul>
+    </details>
+    <button class="btn btn-next" id="settingsOk">✓ Save</button>
+  </div>
+</div>
+
+<script>
+/* ================= helpers ================= */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const strip = h => h.replace(/<[^>]+>/g, '');
+function bounce(el){ if (!el) return; el.classList.remove('pop'); void el.offsetWidth; el.style.animation = 'pop .4s'; setTimeout(() => el.style.animation = '', 420); }
+function shakeEl(el){ if (!el) return; el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+function enter(el, d = 0){ el.style.animation = `popIn .45s ${d}s both`; setTimeout(() => el.style.animation = '', 500 + d * 1000); }
+
+/* ================= saved state ================= */
+const KEYS = ['grid', 'odd', 'sort', 'pat', 'seq', 'code', 'talk'];
+const LEVELED = KEYS.filter(k => k !== 'talk');
+const ageLv = a => a <= 4 ? 0 : a === 5 ? 1 : 2;
+const S = {stars: 0, stickers: [], prog: {}, lv: {}, streak: {}, missRun: {}, rewards: true, age: 4, solved: 0, bounce: 0, brave: 0, talks: 0};
+try{ Object.assign(S, JSON.parse(localStorage.getItem('thinkGarden1') || '{}')); }catch(e){}
+KEYS.forEach(k => {
+  if (typeof S.prog[k] !== 'number') S.prog[k] = 0;
+  if (typeof S.lv[k] !== 'number') S.lv[k] = ageLv(S.age);
+});
+function save(){ try{ localStorage.setItem('thinkGarden1', JSON.stringify(S)); }catch(e){} }
+
+let run = 0, soundOn = true, current = 'home', P = {key: '', miss: 0, helped: false, done: false};
+
+/* ================= voice & sounds ================= */
+let voice = null;
+function pickVoice(){
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v => /^en[-_](US|GB|AU)/i.test(v.lang) && /samantha|google|female|zira|karen|aria|jenny/i.test(v.name)) || vs.find(v => /^en/i.test(v.lang)) || null;
+}
+if ('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function say(text){
+  if (!soundOn || !('speechSynthesis' in window) || !text) return;
+  const clean = text.replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu, '').replace(/[←↑→↓✓✕]/g, '').replace(/\s+/g, ' ').trim();
+  if (!clean) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(clean);
+  if (voice) u.voice = voice;
+  u.lang = voice ? voice.lang : 'en-US'; u.rate = .86; u.pitch = 1.15;
+  speechSynthesis.speak(u);
+}
+let actx = null;
+function tone(freqs, dur = .12, type = 'sine', vol = .07){
+  if (!soundOn) return;
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = actx.currentTime;
+    freqs.forEach((f, i) => {
+      const o = actx.createOscillator(), g = actx.createGain(), t = t0 + i * dur;
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .02); g.gain.exponentialRampToValueAtTime(.001, t + dur * 1.8);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur * 2);
+    });
+  }catch(e){}
+}
+const sfx = {
+  pop: () => tone([680], .08), ok: () => tone([523, 659, 784, 1046], .11), chime: () => tone([784, 1046], .12),
+  no: () => tone([330, 294], .14, 'triangle', .05), whoosh: () => tone([900, 700, 520], .06, 'sine', .05),
+  bump: () => tone([180, 150], .1, 'square', .04), fanfare: () => tone([523, 659, 784, 659, 784, 1046], .13)
+};
+function stopAll(){ run++; if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+
+/* ================= Ollie ================= */
+function guide(html, speech){
+  const el = $('#say');
+  el.innerHTML = html;
+  el.dataset.say = typeof speech === 'string' ? speech : strip(html);
+  if (speech !== false){
+    say(el.dataset.say);
+    const o = $('#owl'); o.classList.remove('talk'); void o.offsetWidth; o.classList.add('talk');
+  }
+}
+$('#owl').onclick = $('#replay').onclick = () => say($('#say').dataset.say);
+
+/* hint hand after a pause */
+let hintFn = null, hintTimer = null, hintDelay = 6000;
+function setHint(fn, delay){ hintFn = fn; hintDelay = delay || 6000; resetHint(); }
+function resetHint(){
+  clearTimeout(hintTimer); $$('.hand').forEach(h => h.remove());
+  if (!hintFn) return;
+  hintTimer = setTimeout(() => {
+    const el = hintFn();
+    if (el && el.isConnected && el.offsetParent !== null){ const h = document.createElement('span'); h.className = 'hand'; h.textContent = '👆'; el.appendChild(h); }
+  }, hintDelay);
+}
+document.addEventListener('pointerdown', () => resetHint(), true);
+
+/* fly a copy of an element to another element */
+function flyTo(src, dst, dur = 450){
+  return new Promise(res => {
+    const r1 = src.getBoundingClientRect(), r2 = dst.getBoundingClientRect();
+    if (reduceMotion || !r1.width){ res(); return; }
+    const g = src.cloneNode(true);
+    Object.assign(g.style, {position: 'fixed', left: r1.left + 'px', top: r1.top + 'px', width: r1.width + 'px', height: r1.height + 'px', margin: '0', zIndex: 45, pointerEvents: 'none'});
+    document.body.appendChild(g);
+    const dx = r2.left - r1.left + (r2.width - r1.width) / 2, dy = r2.top - r1.top + (r2.height - r1.height) / 2;
+    const an = g.animate([{transform: 'none'}, {transform: `translate(${dx * .5}px,${dy * .5 - 40}px) scale(.8)`}, {transform: `translate(${dx}px,${dy}px) scale(.4)`, opacity: .6}], {duration: dur, easing: 'ease-in-out'});
+    const done = () => { g.remove(); res(); };
+    an.onfinish = done; an.oncancel = done;
+  });
+}
+
+/* ================= rewards, tree & growth ================= */
+const STICKERS = ['🦄','🐼','🦁','🐳','🦖','🌈','🚀','🍦','🐙','🦒','🐢','🌟','🎠','🦜','🐬','🍉','🦩','🐝','🌻','🎨','🔭','🧩'];
+const BOUNCE = ["You didn't give up! That's how brains grow.", 'You kept trying, and you did it!', 'You learned from a mistake. Brilliant thinking!', 'Not yet became YES! Well done for sticking with it.'];
+const NOT_YET = ['Hmm, not yet!', 'Ooh, nearly!', 'Good try!', "Let's think again!"];
+$('#starCount').textContent = S.stars;
+function flowersRender(){
+  const f = $('#flowers');
+  f.hidden = current === 'home' || !S.rewards;
+  const p = S.prog[current] || 0;
+  f.innerHTML = Array.from({length: 5}, (_, i) => `<span class="${i < p ? 'on' : ''}">${i < p ? '🌸' : '🌱'}</span>`).join('');
+}
+function stickersRender(){
+  $('#stickerBook').hidden = !S.rewards;
+  $('#stickerList').innerHTML = S.stickers.length ? S.stickers.map(s => `<span>${s}</span>`).join('') : '<span class="empty">Grow 5 flowers 🌸 in a game to get a sticker!</span>';
+}
+const TREE = [
+  {at: 0, e: '🌰', n: 'A tiny seed'}, {at: 3, e: '🌱', n: 'A little sprout'}, {at: 10, e: '🌿', n: 'A growing plant'}, {at: 20, e: '🪴', n: 'A strong bush'},
+  {at: 35, e: '🌳', n: 'A thinking tree'}, {at: 55, e: '🌳', n: 'A fruit tree', d: '🍎'}, {at: 80, e: '🌳', n: 'A blossom tree', d: '🌸'}
+];
+function treeRender(){
+  const pts = S.solved + S.bounce * 2 + S.brave + S.talks * 2;
+  let i = 0; while (i < TREE.length - 1 && pts >= TREE[i + 1].at) i++;
+  const t = TREE[i], nx = TREE[i + 1];
+  const big = $('#treeBig'); big.innerHTML = t.e;
+  if (t.d) [[18, 28], [62, 22], [30, 52], [70, 48]].forEach(([x, y]) => big.insertAdjacentHTML('beforeend', `<span class="deco" style="left:${x}%;top:${y}%">${t.d}</span>`));
+  $('#treeName').textContent = '🌳 My thinking tree: ' + t.n.toLowerCase();
+  $('#treeBar').style.width = (nx ? Math.round((pts - t.at) / (nx.at - t.at) * 100) : 100) + '%';
+  $('#treeStats').innerHTML = `<span class="tstat">🧩 ${S.solved} puzzles</span><span class="tstat">💪 ${S.bounce} kept trying</span><span class="tstat">🦁 ${S.brave} brave choices</span><span class="tstat">💬 ${S.talks} big talks</span>`;
+}
+function confetti(){
+  if (reduceMotion) return;
+  const cols = ['#F6C2A2','#A2D6B8','#A9D3EE','#F6DB8A','#CFC4EE','#F4B9C2'];
+  for (let i = 0; i < 34; i++){
+    const c = document.createElement('div'); c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw'; c.style.background = pick(cols);
+    c.style.animationDelay = Math.random() * .4 + 's'; c.style.animationDuration = 1.5 + Math.random() * .9 + 's';
+    document.body.appendChild(c); setTimeout(() => c.remove(), 3000);
+  }
+}
+function popPraise(text){ const p = document.createElement('div'); p.className = 'praise'; p.textContent = text; document.body.appendChild(p); setTimeout(() => p.remove(), 1900); }
+function win(key, text){
+  sfx.ok(); popPraise('🌟 ' + text);
+  if (!S.rewards) return;
+  confetti();
+  S.stars++; $('#starCount').textContent = S.stars;
+  S.prog[key] = (S.prog[key] || 0) + 1; save(); flowersRender();
+  if (S.prog[key] >= 5){
+    const st = pick(STICKERS); S.stickers.push(st); save();
+    setTimeout(() => { $('#stickerBig').textContent = st; $('#stickerModal').hidden = false; sfx.fanfare(); say('Wow! A new sticker for your sticker book!'); }, 2600);
+  }
+}
+$('#stickerOk').onclick = () => { $('#stickerModal').hidden = true; S.prog[current] = 0; save(); flowersRender(); };
+
+/* ================= shared puzzle flow ================= */
+const LV_NAMES = ['🌱 Starter puzzles', '🌿 Tricky puzzles', '🌳 Super tricky puzzles'];
+$$('section[data-key]').forEach(sec => {
+  const k = sec.dataset.key;
+  if (LEVELED.includes(k)) sec.insertAdjacentHTML('afterbegin', `<div class="lvl-row"><span class="lvl" id="${k}Lvl"></span></div>`);
+  sec.insertAdjacentHTML('beforeend', `
+    <button class="calm-chip" id="${k}Calm" hidden>🫧 Feeling stuck? Take a calm breath</button>
+    <div class="result" id="${k}Result" hidden></div>
+    <div class="footer">
+      <button class="btn btn-help" id="${k}Help">💡 Help</button>
+      <button class="btn btn-next" id="${k}Next" hidden>▶ Another</button>
+      <button class="btn btn-hard" id="${k}Hard" hidden>💪 Trickier!</button>
+    </div>`);
+});
+function begin(k){
+  P = {key: k, miss: 0, helped: false, done: false};
+  $(`#${k}Result`).hidden = true; $(`#${k}Help`).hidden = k === 'talk';
+  $(`#${k}Next`).hidden = true; $(`#${k}Hard`).hidden = true; $(`#${k}Calm`).hidden = true;
+  if (LEVELED.includes(k)) $(`#${k}Lvl`).textContent = LV_NAMES[S.lv[k]];
+}
+function notYet(html, speech){
+  if (P.done) return;
+  P.miss++; sfx.no();
+  const lead = pick(NOT_YET);
+  guide(`${lead} ${html}`, speech ? `${lead} ${speech}` : undefined);
+  if (P.miss === 2) $(`#${P.key}Calm`).hidden = false;
+}
+function adapt(k, miss){
+  let msg = ''; const lv = S.lv[k];
+  if (!miss){
+    S.missRun[k] = 0; S.streak[k] = (S.streak[k] || 0) + 1;
+    if (S.streak[k] >= 3 && lv < 2){ S.lv[k] = lv + 1; S.streak[k] = 0; msg = '🌟 You are ready for trickier puzzles!'; }
+  } else {
+    S.streak[k] = 0;
+    if (miss >= 2){
+      S.missRun[k] = (S.missRun[k] || 0) + 1;
+      if (S.missRun[k] >= 2 && lv > 0){ S.lv[k] = lv - 1; S.missRun[k] = 0; msg = '🌱 The next one is a little easier. Practice makes brains stronger!'; }
+    }
+  }
+  save(); return msg;
+}
+function finish(k, praise, html, extraSay = ''){
+  if (P.done) return;
+  P.done = true; stopAll(); setHint(null);
+  $(`#${k}Calm`).hidden = true; $(`#${k}Help`).hidden = true;
+  const bounced = P.miss > 0;
+  S.solved++; if (bounced) S.bounce++;
+  const msg = adapt(k, P.miss + (P.helped ? 1 : 0));
+  const text = bounced ? pick(BOUNCE) : praise;
+  win(k, text);
+  guide(`<b>${text}</b>`, `${text} ${extraSay}`);
+  setTimeout(() => {
+    const r = $(`#${k}Result`);
+    r.innerHTML = html + (bounced ? '<div class="grow-line">💧 You kept trying, so your thinking tree grew extra!</div>' : '') + (msg ? `<div class="stage-up">${msg}</div>` : '');
+    r.hidden = false; enter(r);
+    $(`#${k}Next`).hidden = false; $(`#${k}Hard`).hidden = S.lv[k] >= 2;
+    setHint(() => $(`#${k}Next`));
+    r.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  }, 700);
+}
+const resHTML = (line, extra = '') => `<div class="res-line">${line}</div>${extra}`;
+
+/* emoji answer buttons */
+const CHOICE_COLORS = [['#FDE7D9', '#DE8A62'], ['#DEEEF8', '#5E9ECB'], ['#ECE7FA', '#8F7DC4'], ['#DDF1E5', '#5DA682']];
+function emojiChoices(box, items, answer, onRight, onWrong){
+  box.innerHTML = ''; delete box.dataset.done;
+  items.forEach((it, i) => {
+    const b = document.createElement('button');
+    b.className = 'choice'; b.textContent = it.e; b.setAttribute('aria-label', it.n);
+    b.style.setProperty('--bgc', CHOICE_COLORS[i % 4][0]); b.style.setProperty('--sh', CHOICE_COLORS[i % 4][1]);
+    b.onclick = () => {
+      if (box.dataset.done || P.done) return;
+      if (it === answer){ box.dataset.done = '1'; b.classList.add('right'); box.querySelectorAll('.choice').forEach(x => x.disabled = true); onRight(); }
+      else { shakeEl(b); b.classList.add('tried'); b.disabled = true; onWrong(it); }
+    };
+    enter(b, i * .06); box.appendChild(b);
+  });
+}
+/* reason chips, read aloud one after another */
+function reasonChips(box, list, onPick){
+  box.innerHTML = '';
+  const els = list.map(r => {
+    const b = document.createElement('button'); b.className = 'reason';
+    b.innerHTML = `<span class="ri">${r.i}</span><span>${r.t}</span>`;
+    b.onclick = () => { if (!b.classList.contains('tried') && !P.done) onPick(r, b); };
+    box.appendChild(b); return b;
+  });
+  return els;
+}
+async function readChips(els, list, lead){
+  const my = run;
+  if (lead){ say(lead); await sleep(Math.max(1500, lead.length * 70)); }
+  for (let i = 0; i < els.length; i++){
+    if (my !== run) return;
+    els.forEach(e => e.classList.remove('lit')); els[i].classList.add('lit');
+    say(list[i].t); await sleep(Math.max(1700, list[i].t.length * 80));
+  }
+  els.forEach(e => e.classList.remove('lit'));
+}
+
+/* ================= ANIMAL HOUSES (picture logic grid, a child's Sudoku) =================
+   One clear rule: one of each in every row (level 1), and in every column too (levels 2–3).
+   Puzzles are built so every gap can be solved for SURE, one step at a time.
+   Thinking routine: find a house where you can be sure → look along the row (and column)
+   → who is missing? → say why. A choice that could fit but isn't certain is called a guess. */
+const GRID_SETS = [
+  [{e:'🐱',n:'cat'},{e:'🐶',n:'dog'},{e:'🐰',n:'bunny'},{e:'🐻',n:'bear'}],
+  [{e:'🐸',n:'frog'},{e:'🐥',n:'chick'},{e:'🐷',n:'pig'},{e:'🐮',n:'cow'}],
+  [{e:'🐟',n:'fish'},{e:'🐢',n:'turtle'},{e:'🦀',n:'crab'},{e:'🐙',n:'octopus'}],
+  [{e:'🐵',n:'monkey'},{e:'🦁',n:'lion'},{e:'🐘',n:'elephant'},{e:'🦒',n:'giraffe'}]
+];
+let GR = null;
+// candidates for a blank cell, using the row (and the column unless rowsOnly)
+function gridCands(g, N, r, c, rowsOnly){
+  const used = new Set();
+  for (let k = 0; k < N; k++){ if (g[r][k] >= 0) used.add(g[r][k]); if (!rowsOnly && g[k][c] >= 0) used.add(g[k][c]); }
+  return Array.from({length: N}, (_, v) => v).filter(v => !used.has(v));
+}
+// can it be finished by "only one can go here" steps? returns the order of sure cells
+function gridSolve(p, N, rowsOnly){
+  const g = p.map(r => r.slice()), steps = [];
+  for (;;){
+    let found = false, left = 0;
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++){
+      if (g[r][c] >= 0) continue; left++;
+      const cs = gridCands(g, N, r, c, rowsOnly);
+      if (cs.length === 1){ g[r][c] = cs[0]; steps.push([r, c]); found = true; }
+    }
+    if (!left) return steps;
+    if (!found) return null;
+  }
+}
+function gridGen(lv){
+  const N = lv === 2 ? 4 : 3, rowsOnly = lv === 0, want = lv === 0 ? 3 : lv === 1 ? 5 : 8;
+  for (let t = 0; t < 300; t++){
+    const rp = shuffle([...Array(N).keys()]), cp = shuffle([...Array(N).keys()]), sp = shuffle([...Array(N).keys()]);
+    const sol = rp.map(r => cp.map(c => sp[(r + c) % N]));
+    const p = sol.map(r => r.slice());
+    let n = 0;
+    for (const i of shuffle([...Array(N * N).keys()])){
+      if (n >= want) break;
+      const r = Math.floor(i / N), c = i % N, keep = p[r][c];
+      p[r][c] = -1;
+      if (gridSolve(p, N, rowsOnly)) n++; else p[r][c] = keep;
+    }
+    if (n < want) continue;
+    if (lv >= 1 && gridSolve(p, N, true)) continue;   // levels 2–3 must need the column rule
+    return {N, sol, p, rowsOnly};
+  }
+  return gridGen(Math.max(0, lv - 1));
+}
+const gName = v => GR.set[v].n;
+const gSure = (r, c) => gridCands(GR.p, GR.N, r, c, GR.rowsOnly).length === 1;
+function newGrid(){
+  stopAll(); begin('grid'); setHint(null);
+  const lv = S.lv.grid;
+  GR = {...gridGen(lv), sel: null, set: pick(GRID_SETS), helps: 0};
+  const N = GR.N, all = GR.set.slice(0, N).map(a => a.e).join('');
+  $('#gridRules').innerHTML = `<span class="rule">➡️ Each row: <span class="rs">${all}</span></span>` +
+    (GR.rowsOnly ? '' : `<span class="rule">⬇️ Each column: <span class="rs">${all}</span></span>`);
+  const b = $('#gridBoard'); b.innerHTML = '';
+  b.style.setProperty('--n', N); b.style.setProperty('--w', N === 4 ? '340px' : '300px');
+  GR.cells = [];
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++){
+    const el = document.createElement('button'); el.className = 'lcell';
+    const v = GR.p[r][c];
+    if (v >= 0){ el.textContent = GR.set[v].e; el.setAttribute('aria-label', GR.set[v].n); el.tabIndex = -1; }
+    else { el.classList.add('blank'); el.textContent = '?'; el.setAttribute('aria-label', 'empty house'); }
+    el.onclick = () => gridSelect(r, c);
+    b.appendChild(el); GR.cells.push(el); enter(el, (r * N + c) * .03);
+  }
+  $('#gridPickWrap').hidden = true;
+  const names = GR.set.slice(0, N).map(a => a.n);
+  const list = names.slice(0, -1).join(', ') + ' and ' + names[N - 1];
+  guide(GR.rowsOnly ? 'The rule: every <b>row</b> has one of each animal. Tap an empty house!' : 'The rule: one of each in every <b>row</b> ➡️ and every <b>column</b> ⬇️. Find a house where you are <b>sure</b>!',
+    GR.rowsOnly ? `Every row needs one ${list}. Tap an empty house, and find who is missing!`
+                : `Here's the rule. Every row going across, and every column going down, has one ${list}. Find an empty house where you can be sure!`);
+  setHint(() => gridEasiest(), 9000);
+}
+const gCell = (r, c) => GR.cells[r * GR.N + c];
+function gridEasiest(){
+  // a sure house; prefer the one with the fewest blanks around it
+  let best = null, score = 99;
+  for (let r = 0; r < GR.N; r++) for (let c = 0; c < GR.N; c++){
+    if (GR.p[r][c] >= 0 || !gSure(r, c)) continue;
+    const blanks = GR.p[r].filter(v => v < 0).length + (GR.rowsOnly ? 0 : GR.p.filter(row => row[c] < 0).length);
+    if (blanks < score){ score = blanks; best = [r, c]; }
+  }
+  return best ? gCell(...best) : null;
+}
+function gridMark(){
+  GR.cells.forEach(el => el.classList.remove('hl', 'sel', 'glow'));
+  if (!GR.sel) return;
+  const [r, c] = GR.sel;
+  for (let k = 0; k < GR.N; k++){ gCell(r, k).classList.add('hl'); if (!GR.rowsOnly) gCell(k, c).classList.add('hl'); }
+  gCell(r, c).classList.add('sel');
+}
+function gridSelect(r, c){
+  if (P.done || GR.p[r][c] >= 0 || GR.busy) return;
+  GR.sel = [r, c]; gridMark(); sfx.pop();
+  $('#gridPickWrap').hidden = false;
+  $('#gridAsk').innerHTML = GR.rowsOnly ? 'Look along the row ➡️. Who is missing? 👇' : 'Look across ➡️ and down ⬇️. Who goes here? 👇';
+  const items = GR.set.slice(0, GR.N);
+  emojiChoices($('#gridChoices'), items, items[GR.sol[r][c]], gridRight, it => gridWrong(items.indexOf(it)));
+  say(GR.rowsOnly ? 'Look along this row. Who is missing?' : 'Look across this row, and down this column. Who goes here?');
+  setHint(null);
+  $('#gridPickWrap').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+function gridWrong(v){
+  const [r, c] = GR.sel;
+  let clash = null, where = '';
+  for (let k = 0; k < GR.N; k++){
+    if (GR.p[r][k] === v){ clash = gCell(r, k); where = 'row'; break; }
+    if (!GR.rowsOnly && GR.p[k][c] === v){ clash = gCell(k, c); where = 'column'; break; }
+  }
+  if (clash){
+    clash.classList.remove('clash'); void clash.offsetWidth; clash.classList.add('clash');
+    setTimeout(() => clash.classList.remove('clash'), 1500);
+    notYet(`There's already a <b>${gName(v)}</b> in this ${where}! Only one of each.`);
+  } else {
+    notYet(`A ${gName(v)} could fit… but we can't be <b>sure</b> yet. Let's find a house where only one animal can go!`,
+      `A ${gName(v)} could fit here, but we can't be sure yet. That would be a guess! Let's find a house where only one animal can go.`);
+    GR.sel = null; gridMark(); $('#gridPickWrap').hidden = true;
+    setHint(() => gridEasiest(), 3000);
+  }
+}
+function gridRight(){
+  const [r, c] = GR.sel, v = GR.sol[r][c], el = gCell(r, c);
+  const sure = gSure(r, c);
+  GR.p[r][c] = v; GR.sel = null; GR.busy = true;
+  el.classList.remove('blank'); el.textContent = GR.set[v].e; el.classList.add('filled'); el.setAttribute('aria-label', gName(v));
+  sfx.chime(); gridMark();
+  if (GR.p.every(row => row.every(x => x >= 0))){
+    GR.busy = false;
+    const all = GR.set.slice(0, GR.N).map(a => a.e).join(' ');
+    finish('grid', pick(['You used the rule to be sure!', 'You checked the row and the column!', 'You thought it through, one house at a time!']),
+      resHTML('Everyone has a home! 🏡', `<div class="res-rep">${GR.rowsOnly ? 'Every row' : 'Every row and every column'} has ${all}</div><div class="next-q">Ask: "How did you know where the ${gName(v)} goes?"</div>`));
+    return;
+  }
+  const why = GR.rowsOnly || !sure ? `The ${gName(v)} was the one missing from the row.` : `The ${gName(v)} was the only one missing.`;
+  setTimeout(() => {
+    GR.busy = false;
+    $('#gridPickWrap').hidden = true;
+    guide(`Yes! ${why} Tap the next empty house.`);
+    setHint(() => gridEasiest(), 7000);
+  }, 500);
+}
+function gridHelp(){
+  if (P.done) return;
+  if (!GR.sel){
+    const el = gridEasiest(); if (!el) return;
+    const i = GR.cells.indexOf(el);
+    gridSelect(Math.floor(i / GR.N), i % GR.N);
+    guide('Start here! Only <b>one</b> animal can go in this house.');
+    return;
+  }
+  const [r, c] = GR.sel;
+  const rowHas = GR.p[r].filter(v => v >= 0).map(gName);
+  const colHas = GR.rowsOnly ? [] : GR.p.map(row => row[c]).filter(v => v >= 0).map(gName);
+  const join = a => a.length ? (a.length === 1 ? a[0] : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]) : 'nobody yet';
+  guide(`This row has <b>${join(rowHas)}</b>.${GR.rowsOnly ? '' : ` This column has <b>${join(colHas)}</b>.`} So who is left?`);
+  // fade the animals that can't go here
+  const can = gridCands(GR.p, GR.N, r, c, GR.rowsOnly);
+  [...$('#gridChoices').children].forEach((b, k) => { if (!can.includes(k)){ b.classList.add('tried'); b.disabled = true; } });
+}
+/* ================= ODD ONE OUT + WHY (classify, then give a reason) ================= */
+const ODD = [
+  {lv:0, group:[['🍎','apple'],['🍌','banana'],['🍇','grapes'],['🍓','strawberry'],['🍊','orange']], odd:[['🚗','car'],['🧸','teddy bear'],['⚽','ball']], same:'The others are all fruit.',
+   why:{i:'🍽️',t:"You can't eat it"}, wrong:[{i:'🐾',t:'It is an animal'},{i:'💧',t:'It lives in water'}]},
+  {lv:0, group:[['🐶','dog'],['🐱','cat'],['🐰','bunny'],['🐮','cow'],['🐷','pig']], odd:[['🪑','chair'],['🚲','bike'],['🎈','balloon']], same:'The others are all animals.',
+   why:{i:'🐾',t:'It is not an animal'}, wrong:[{i:'🍽️',t:'You can eat it'},{i:'🌙',t:'It comes out at night'}]},
+  {lv:0, group:[['👕','T-shirt'],['👖','jeans'],['🧦','socks'],['🧢','cap'],['👗','dress']], odd:[['🍌','banana'],['🐟','fish'],['🚂','train']], same:'The others are all clothes.',
+   why:{i:'👕',t:"You can't wear it"}, wrong:[{i:'🪽',t:'It can fly'},{i:'❄️',t:'It is very cold'}]},
+  {lv:0, group:[['🚗','car'],['🚌','bus'],['🚲','bike'],['🚂','train'],['🚜','tractor']], odd:[['🐘','elephant'],['🍎','apple'],['🌳','tree']], same:'The others all have wheels.',
+   why:{i:'🛞',t:'It has no wheels'}, wrong:[{i:'🔥',t:'It is hot'},{i:'🎵',t:'It sings songs'}]},
+  {lv:1, group:[['🐦','bird'],['🦋','butterfly'],['🐝','bee'],['✈️','plane'],['🚁','helicopter']], odd:[['🐢','turtle'],['🐌','snail'],['🐘','elephant']], same:'The others can all fly.',
+   why:{i:'🪽',t:"It can't fly"}, wrong:[{i:'👕',t:'You can wear it'},{i:'🔴',t:'It is red'}]},
+  {lv:1, group:[['🐟','fish'],['🐙','octopus'],['🐬','dolphin'],['🐳','whale'],['🦈','shark']], odd:[['🐄','cow'],['🦒','giraffe'],['🐘','elephant']], same:'The others all live in the water.',
+   why:{i:'💧',t:"It doesn't live in water"}, wrong:[{i:'🪽',t:'It can fly'},{i:'🍓',t:'It is a fruit'}]},
+  {lv:1, group:[['🍎','apple'],['🍓','strawberry'],['🍒','cherries'],['🚒','fire truck'],['🍅','tomato']], odd:[['🍌','banana'],['🍋','lemon'],['🐤','chick']], same:'The others are all red.',
+   why:{i:'🎨',t:"It's not red"}, wrong:[{i:'💧',t:'It lives in water'},{i:'🛞',t:'It has wheels'}]},
+  {lv:1, group:[['⚽','soccer ball'],['🏀','basketball'],['🍊','orange'],['🌕','full moon'],['🍩','doughnut']], odd:[['📕','book'],['🪁','kite'],['🍌','banana']], same:'The others are all round.',
+   why:{i:'⭕',t:"It's not round"}, wrong:[{i:'🐾',t:'It is an animal'},{i:'🔥',t:'It is hot'}]},
+  {lv:2, group:[['🍎','apple'],['🍓','strawberry'],['🍒','cherries'],['🍅','tomato']], odd:[['🚒','fire truck'],['🎈','balloon']], same:'They are all red, but only the others are food.',
+   why:{i:'🍽️',t:"You can't eat it"}, wrong:[{i:'🎨',t:"It's a different color"},{i:'🪽',t:'It can fly'}]},
+  {lv:2, group:[['🐟','fish'],['🐙','octopus'],['🐬','dolphin'],['🐳','whale']], odd:[['🚤','speed boat'],['⛵','sailboat']], same:'They are all in the water, but only the others are alive.',
+   why:{i:'🐾',t:"It's not an animal"}, wrong:[{i:'💧',t:"It's not in the water"},{i:'🍽️',t:'You can eat it'}]},
+  {lv:2, group:[['⚽','soccer ball'],['🏀','basketball'],['🎾','tennis ball'],['🏐','volleyball']], odd:[['🍊','orange'],['🍪','cookie']], same:'They are all round, but only the others are balls.',
+   why:{i:'🍽️',t:'You can eat it'}, wrong:[{i:'⭕',t:"It's not round"},{i:'🛞',t:'It has wheels'}]},
+  {lv:2, group:[['🐶','dog'],['🐱','cat'],['🐰','bunny'],['🐻','bear']], odd:[['🧸','teddy bear']], same:'They all have fur and ears, but only the others are alive.',
+   why:{i:'🧸',t:"It's a toy, not alive"}, wrong:[{i:'💧',t:'It lives in water'},{i:'🪽',t:'It can fly'}]}
+];
+let OD = null;
+function newOdd(){
+  stopAll(); begin('odd'); setHint(null);
+  const pool = ODD.filter(o => o.lv === S.lv.odd && o !== OD?.set);
+  const set = pick(pool), g = shuffle(set.group).slice(0, 3), o = pick(set.odd);
+  OD = {set, o, stage: 'pick', helps: 0};
+  const items = shuffle([...g.map(x => ({x, odd: false})), {x: o, odd: true}]);
+  const grid = $('#oddGrid'); grid.innerHTML = '';
+  items.forEach((it, i) => {
+    const b = document.createElement('button'); b.className = 'otile';
+    b.innerHTML = `${it.x[0]}<small>${it.x[1]}</small>`; b.setAttribute('aria-label', it.x[1]);
+    b.onclick = () => oddTap(it, b);
+    it.el = b; grid.appendChild(b); enter(b, i * .07);
+  });
+  OD.items = items;
+  $('#oddWhyWrap').hidden = true;
+  guide('Three go together. <b>Which one does not belong?</b>', `Look: ${items.map(i => i.x[1]).join(', ')}. Three of them go together. Which one does not belong?`);
+  setHint(() => OD.items.find(i => i.odd).el, 12000);
+}
+function oddTap(it, b){
+  if (P.done || OD.stage !== 'pick') return;
+  if (it.odd){
+    OD.stage = 'why'; setHint(null); sfx.chime();
+    b.classList.add('picked'); OD.items.forEach(x => { if (!x.odd) x.el.classList.add('quiet'); });
+    const list = shuffle([OD.set.why, ...OD.set.wrong]);
+    $('#oddWhyWrap').hidden = false;
+    const els = reasonChips($('#oddReasons'), list, (r, el) => oddReason(r, el));
+    guide(`Yes, the <b>${it.x[1]}</b>! Now, <b>why</b> doesn't it belong?`, false);
+    readChips(els, list, `Yes, the ${it.x[1]}! Now, why doesn't it belong? Is it because...`);
+    $('#oddWhyWrap').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  } else {
+    shakeEl(b);
+    notYet(`The <b>${it.x[1]}</b> goes with some of the others. Look for <b>what is the same</b>!`);
+  }
+}
+function oddReason(r, el){
+  if (r === OD.set.why){
+    el.classList.add('right');
+    finish('odd', pick(['You found it AND you said why!', 'Great reason! You explained your thinking.', 'You looked closely and gave a reason!']),
+      resHTML(`The <b>${OD.o[1]}</b> doesn't belong. ${OD.o[0]}`, `<div class="res-rep">${OD.set.same}</div><div class="next-q">Ask: "Can you think of another reason?"</div>`),
+      `The ${OD.o[1]} doesn't belong. ${r.t}. ${OD.set.same}`);
+  } else {
+    el.classList.add('tried');
+    notYet(`Is that true for the <b>${OD.o[1]}</b>? Look again, and think about the others too.`);
+  }
+}
+function oddHelp(){
+  if (P.done) return;
+  if (OD.stage === 'pick'){
+    const grp = OD.items.filter(i => !i.odd);
+    grp.forEach(i => i.el.classList.add('group'));
+    guide(`Look at these three. ${OD.set.lv < 2 ? OD.set.same.replace('The others', 'They') : 'They are alike in a special way.'} Which one is different?`);
+    setTimeout(() => grp.forEach(i => i.el.classList.remove('group')), 3500);
+  } else {
+    OD.helps++;
+    if (OD.helps === 1) guide(`Think: what do the other three have, that the <b>${OD.o[1]}</b> doesn't?`);
+    else { const right = [...$$('#oddReasons .reason')].find(e => e.textContent.includes(OD.set.why.t)); right?.classList.add('glow'); guide(`${OD.set.same} So, which reason is true?`); }
+  }
+}
+
+/* ================= SORT IT (sort by a rule, then find a secret rule) ================= */
+const SORT_RULES = [
+  {id:'af', lv:0, L:['🐾','Animals'], R:['🍽️','Food'], l:[['🐶','dog'],['🐱','cat'],['🐰','bunny'],['🐮','cow'],['🐷','pig'],['🐵','monkey']], r:[['🍎','apple'],['🍌','banana'],['🍞','bread'],['🧀','cheese'],['🥕','carrot'],['🍪','cookie']], q:n => `Is the ${n} an animal, or food?`},
+  {id:'ry', lv:0, L:['🔴','Red'], R:['🟡','Yellow'], l:[['🍎','apple'],['🍓','strawberry'],['🍒','cherries'],['🚒','fire truck'],['🌹','rose'],['🍅','tomato']], r:[['🍌','banana'],['🌻','sunflower'],['🐤','chick'],['⭐','star'],['🍋','lemon'],['🧀','cheese']], q:n => `Is the ${n} red, or yellow?`},
+  {id:'bs', lv:0, size:true, L:['🐘','Big'], R:['🐭','Small'], pool:[['🍎','apple'],['🐶','dog'],['⭐','star'],['🚗','car'],['🎈','balloon'],['🐟','fish'],['🌸','flower'],['🐢','turtle']], q:n => `Is this ${n} big, or small?`},
+  {id:'wl', lv:1, L:['🌊','In water'], R:['🌳','On land'], l:[['🐟','fish'],['🐙','octopus'],['🐬','dolphin'],['🦈','shark'],['🐳','whale'],['🐠','tropical fish']], r:[['🐄','cow'],['🦒','giraffe'],['🐘','elephant'],['🐿️','squirrel'],['🐎','horse'],['🐑','sheep']], q:n => `Does the ${n} live in the water, or on land?`},
+  {id:'hc', lv:1, L:['🔥','Hot'], R:['❄️','Cold'], l:[['☀️','sun'],['🔥','fire'],['☕','hot cocoa'],['🍲','hot soup'],['🌋','volcano']], r:[['🧊','ice'],['⛄','snowman'],['🍦','ice cream'],['🏔️','snowy mountain'],['❄️','snowflake']], q:n => `Is the ${n} hot, or cold?`},
+  {id:'sg', lv:1, L:['☁️','In the sky'], R:['🛣️','On the ground'], l:[['✈️','plane'],['🐦','bird'],['🚁','helicopter'],['🦋','butterfly'],['🎈','balloon'],['🪁','kite']], r:[['🚗','car'],['🐢','turtle'],['🐌','snail'],['🚂','train'],['🐘','elephant'],['🚲','bike']], q:n => `Does the ${n} go in the sky, or on the ground?`}
+];
+const ruleText = r => `${r.L[0]} ${r.L[1]} & ${r.R[0]} ${r.R[1]}`;
+let SR = null;
+function newSort(){
+  stopAll(); begin('sort'); setHint(null);
+  const lv = S.lv.sort, mystery = lv === 2;
+  const pool = SORT_RULES.filter(r => (mystery || r.lv === lv) && r !== SR?.rule);
+  const rule = pick(pool), n = mystery ? 4 : 3;
+  let L, R;
+  if (rule.size){
+    const it = shuffle(rule.pool);
+    L = it.slice(0, n).map(x => ({e: x[0], n: x[1], side: 0, size: 'bg'}));
+    R = it.slice(n, n * 2).map(x => ({e: x[0], n: x[1], side: 1, size: 'sm'}));
+  } else {
+    L = shuffle(rule.l).slice(0, n).map(x => ({e: x[0], n: x[1], side: 0}));
+    R = shuffle(rule.r).slice(0, n).map(x => ({e: x[0], n: x[1], side: 1}));
+  }
+  const flip = Math.random() < .5;
+  SR = {rule, mystery, bSide: flip ? [1, 0] : [0, 1], queue: [], busy: false};
+  [0, 1].forEach(bi => {
+    const b = $('#sortB' + bi), side = SR.bSide[bi], lab = side === 0 ? rule.L : rule.R;
+    b.querySelector('.blabel').innerHTML = mystery ? '<span class="bi">❓</span>Secret' : `<span class="bi">${lab[0]}</span>${lab[1]}`;
+    b.querySelector('.bitems').innerHTML = '';
+    b.setAttribute('aria-label', mystery ? 'secret basket' : lab[1] + ' basket');
+    b.classList.remove('glow');
+  });
+  if (mystery){
+    // one example already in each basket: the child works out the rule from them
+    [L.shift(), R.shift()].forEach(it => sortAdd(it));
+  }
+  SR.queue = shuffle([...L, ...R]);
+  $('#sortRuleWrap').hidden = true;
+  if (mystery) guide('🤫 Secret baskets! Look at what is inside. Where does each one go?', 'These baskets have a secret rule! Look at what is already inside. Then put each picture where it belongs.');
+  else guide(`Sort them: <b>${rule.L[1]}</b> or <b>${rule.R[1]}</b>?`, `Let's sort! ${rule.L[1]} in one basket, ${rule.R[1]} in the other.`);
+  const my = run; setTimeout(() => { if (my === run) sortShow(true); }, mystery ? 4200 : 2600);
+}
+function sortAdd(it){
+  const bi = SR.bSide.indexOf(it.side);
+  $('#sortB' + bi + ' .bitems').insertAdjacentHTML('beforeend', `<span class="${it.size || ''}">${it.e}</span>`);
+}
+function sortShow(first){
+  const it = SR.queue[0], el = $('#sortItem');
+  if (!it){ el.innerHTML = ''; $('#sortLeft').textContent = ''; sortEnd(); return; }
+  el.textContent = it.e; el.className = 'sort-item' + (it.size === 'sm' ? ' small' : ''); enter(el);
+  $('#sortLeft').textContent = `${SR.queue.length} to sort`;
+  if (first || !SR.mystery) say(SR.mystery ? `Where does the ${it.n} go?` : SR.rule.q(it.n));
+  SR.busy = false;
+}
+function sortTap(bi){
+  if (P.done || SR.busy) return;
+  const it = SR.queue[0]; if (!it) return;
+  const side = SR.bSide[bi], b = $('#sortB' + bi);
+  if (it.side === side){
+    SR.busy = true; b.classList.remove('glow');
+    const target = b.querySelector('.bitems');
+    flyTo($('#sortItem'), target, 420).then(() => { SR.queue.shift(); sortAdd(it); sfx.pop(); bounce(b); setTimeout(() => sortShow(), 250); });
+    $('#sortItem').textContent = '';
+  } else {
+    shakeEl(b);
+    if (SR.mystery) notYet(`Look at what is in that basket. Does the <b>${it.n}</b> go with them?`);
+    else if (SR.rule.size) notYet(`Look: is this ${it.n} <b>${it.size === 'bg' ? 'big' : 'small'}</b>, or ${it.size === 'bg' ? 'small' : 'big'}?`);
+    else { const lab = side === 0 ? SR.rule.L[1] : SR.rule.R[1]; notYet(`Is the ${it.n} <b>${lab.toLowerCase()}</b>? Try the other basket!`); }
+  }
+}
+function sortEnd(){
+  if (!SR.mystery){
+    finish('sort', pick(['You followed the rule every time!', 'You looked carefully at each one!', 'Careful sorting!']),
+      resHTML(`All sorted: <b>${SR.rule.L[1]}</b> and <b>${SR.rule.R[1]}</b>!`, '<div class="next-q">Ask: "Can you think of one more thing for each basket?"</div>'));
+    return;
+  }
+  const list = shuffle([SR.rule, ...shuffle(SORT_RULES.filter(r => r !== SR.rule)).slice(0, 2)]).map(r => ({i: '🧺', t: ruleText(r), r}));
+  $('#sortRuleWrap').hidden = false;
+  const els = reasonChips($('#sortRules'), list, (c, el) => {
+    if (c.r === SR.rule){
+      el.classList.add('right');
+      finish('sort', 'You found the secret rule!', resHTML(`The secret rule was <b>${SR.rule.L[1]}</b> and <b>${SR.rule.R[1]}</b>!`, '<div class="res-rep">🕵️ You worked out the rule just by looking at the examples.</div>'));
+    } else { el.classList.add('tried'); notYet('Look in the baskets again. What is the same about everything in each one?'); }
+  });
+  guide('All sorted! So, what was the <b>secret rule</b>?', false);
+  readChips(els, list.map(l => ({t: `${l.r.L[1]} and ${l.r.R[1]}`})), 'All sorted! So, what was the secret rule? Was it...');
+  $('#sortRuleWrap').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+function sortHelp(){
+  if (P.done) return;
+  const it = SR.queue[0];
+  if (!it){ guide('Look at everything in one basket. What is the same about them?'); return; }
+  const bi = SR.bSide.indexOf(it.side), b = $('#sortB' + bi);
+  b.classList.add('glow');
+  if (SR.mystery) guide(`Look! The ${it.n} goes with these ones. What is the same?`);
+  else { const lab = it.side === 0 ? SR.rule.L[1] : SR.rule.R[1]; guide(`The ${it.n} is <b>${lab.toLowerCase()}</b>.`, `The ${it.n} goes in ${lab.toLowerCase()}.`); }
+}
+
+/* ================= PATTERNS (find what repeats, fix the bug) ================= */
+const PAT_SETS = [
+  [{e:'🍎',n:'apple'},{e:'🍌',n:'banana'},{e:'🍇',n:'grapes'}], [{e:'🔴',n:'red'},{e:'🔵',n:'blue'},{e:'🟡',n:'yellow'}],
+  [{e:'⭐',n:'star'},{e:'🌙',n:'moon'},{e:'☁️',n:'cloud'}], [{e:'🐶',n:'dog'},{e:'🐱',n:'cat'},{e:'🐭',n:'mouse'}],
+  [{e:'🚗',n:'car'},{e:'🚌',n:'bus'},{e:'🚲',n:'bike'}], [{e:'🌸',n:'flower'},{e:'🍀',n:'clover'},{e:'🍄',n:'mushroom'}],
+  [{e:'🟥',n:'red square'},{e:'🔺',n:'triangle'},{e:'🟢',n:'green circle'}]
+];
+let PT = null;
+function newPat(){
+  stopAll(); begin('pat'); setHint(null);
+  const lv = S.lv.pat, set = shuffle(pick(PAT_SETS));
+  const unit = lv === 0 ? 'AB' : lv === 1 ? pick(['AAB', 'ABB', 'ABC']) : pick(['AABB', 'ABBC', 'ABAC', 'ABC']);
+  const r = Math.random();
+  const mode = lv === 0 ? 'next' : lv === 1 ? (r < .7 ? 'next' : 'bug') : (r < .35 ? 'next' : r < .65 ? 'gap' : 'bug');
+  const len = unit.length === 2 ? 6 : unit.length === 3 ? 8 : 9;
+  const seq = Array.from({length: len}, (_, i) => set['ABC'.indexOf(unit[i % unit.length])]);
+  const pos = mode === 'next' ? len - 1 : rnd(unit.length, len - (mode === 'gap' ? 2 : 1));
+  PT = {set, unit, seq, mode, pos, len, stage: mode === 'bug' ? 'find' : 'pick', helps: 0};
+  if (mode === 'bug') PT.wrong = pick(set.filter(x => x !== seq[pos]));
+  const row = $('#patRow'); row.innerHTML = ''; row.classList.remove('letters');
+  PT.tiles = seq.map((it, i) => {
+    const t = document.createElement('button'); t.className = 'tile';
+    if (mode !== 'bug' && i === pos){ t.classList.add('q'); t.textContent = '?'; t.setAttribute('aria-label', 'missing'); }
+    else { const show = mode === 'bug' && i === pos ? PT.wrong : it; t.textContent = show.e; t.setAttribute('aria-label', show.n); }
+    t.onclick = () => patTileTap(i);
+    row.appendChild(t); enter(t, i * .05); return t;
+  });
+  $('#patHint').textContent = '';
+  const names = seq.map((it, i) => i === pos && mode !== 'bug' ? 'hmm' : (mode === 'bug' && i === pos ? PT.wrong.n : it.n));
+  if (mode === 'bug'){
+    $('#patAskWrap').hidden = true;
+    guide('Oops! One picture is wrong. <b>Find the bug</b> 🐞', `Oh no! One picture broke the pattern. Can you find the bug? ${names.join(', ')}.`);
+  } else {
+    $('#patAskWrap').hidden = false;
+    $('#patAsk').innerHTML = mode === 'next' ? 'What comes <b>next</b>? 👇' : 'What is <b>missing</b>? 👇';
+    patChoices();
+    guide(mode === 'next' ? 'What comes <b>next</b>?' : 'Which picture is <b>missing</b>?', `${names.join(', ')}. ${mode === 'next' ? 'What comes next?' : 'What is missing?'}`);
+  }
+}
+function patChoices(){
+  emojiChoices($('#patChoices'), shuffle(PT.set), PT.seq[PT.pos], patRight, () => {
+    if (PT.helps === 0) notYet("Let's read the pattern together!");
+    else notYet('Look at the same place in the group before!');
+    const r = run; setTimeout(() => { if (r === run && !P.done) patHelp(true); }, 1400);
+  });
+}
+function patTileTap(i){
+  if (P.done || PT.mode !== 'bug' || PT.stage !== 'find') return;
+  if (i === PT.pos){
+    PT.stage = 'pick'; sfx.chime();
+    PT.tiles[i].classList.add('bug');
+    $('#patAskWrap').hidden = false; $('#patAsk').innerHTML = 'You found the bug! What <b>should</b> go there? 👇';
+    patChoices();
+    guide('You found the bug! 🐞 What <b>should</b> go there?');
+  } else {
+    shakeEl(PT.tiles[i]);
+    notYet('That one fits the pattern. Keep looking for the bug!');
+  }
+}
+function patRight(){
+  const t = PT.tiles[PT.pos]; t.classList.remove('q', 'bug'); t.textContent = PT.seq[PT.pos].e; t.classList.add('fixed');
+  // show the rule as letters: pictures → abstract (A B A B)
+  $('#patRow').classList.add('letters');
+  PT.tiles.forEach((tile, i) => { const L = PT.unit[i % PT.unit.length]; tile.insertAdjacentHTML('beforeend', `<span class="let ${L}">${L}</span>`); });
+  const chunk = PT.unit.split('').map(L => PT.set['ABC'.indexOf(L)].n).join(', ');
+  const praise = PT.mode === 'bug' ? 'You fixed the bug!' : pick(['You found the part that repeats!', 'You spotted the rule!', 'You looked for what repeats!']);
+  finish('pat', praise, resHTML(`The rule is <b>${PT.unit.split('').join(' ')}</b>`, `<div class="res-rep">🔁 ${chunk}, again and again.</div><div class="next-q">Try: make this pattern with toys, or clap it! 👏</div>`),
+    `The pattern is ${chunk}, again and again.`);
+}
+async function patHelp(auto){
+  if (P.done) return;
+  if (PT.stage === 'find' && !auto){ PT.helps++; }
+  const my = ++run, U = PT.unit.length;
+  // colour each repeat, then read it group by group
+  PT.tiles.forEach((t, i) => { t.classList.toggle('ca', Math.floor(i / U) % 2 === 0); t.classList.toggle('cb', Math.floor(i / U) % 2 === 1); });
+  $('#patHint').textContent = 'Each colour is one group that repeats.';
+  if (PT.helps >= 1 && PT.mode !== 'bug'){
+    const twin = PT.tiles[PT.pos - U]; twin?.classList.add('glow');
+    guide('Look at the <b>same place</b> in the group before! ✨');
+    setTimeout(() => twin?.classList.remove('glow'), 4000);
+    PT.helps++; return;
+  }
+  PT.helps++;
+  guide("Let's read it, group by group.", false);
+  for (let i = 0; i < PT.len; i++){
+    if (my !== run) return;
+    PT.tiles.forEach(t => t.classList.remove('lit')); PT.tiles[i].classList.add('lit');
+    const it = PT.mode === 'bug' && i === PT.pos ? PT.wrong : PT.seq[i];
+    say(PT.mode !== 'bug' && i === PT.pos ? 'hmm?' : it.n); sfx.pop();
+    await sleep(i % U === U - 1 ? 1050 : 800);
+    if (PT.mode !== 'bug' && i === PT.pos) break;
+  }
+  PT.tiles.forEach(t => t.classList.remove('lit'));
+  if (my !== run) return;
+  guide(PT.mode === 'bug' ? 'Which group looks <b>different</b> from the others?' : 'What fits the pattern? Tap it!');
+}
+
+/* ================= WHAT FIRST (sequencing, cause & effect) ================= */
+const SEQS = [
+  {lv:0, s:[['🥚','An egg'],['🐣','It hatches'],['🐥','A little chick']], h:'The chick comes out of the egg.'},
+  {lv:0, s:[['🧦','Socks on'],['👟','Shoes on'],['🏃','Go and play']], h:'Can you put shoes on before socks? 😄'},
+  {lv:0, s:[['☁️','Clouds come'],['🌧️','It rains'],['🌈','A rainbow']], h:'Rain needs clouds first.'},
+  {lv:0, s:[['🐛','A caterpillar'],['🍃','It eats leaves'],['🦋','A butterfly']], h:'The caterpillar eats and grows first.'},
+  {lv:0, s:[['🍦','Get ice cream'],['😋','Eat it'],['🧻','Wipe your face']], h:'You need ice cream before you can eat it!'},
+  {lv:1, s:[['🌰','A seed'],['🌱','A sprout'],['🌿','A plant'],['🌻','A flower']], h:'A plant grows from a seed.'},
+  {lv:1, s:[['🌅','Wake up'],['☀️','Daytime'],['🌇','Evening'],['🌙','Bedtime']], h:'The day starts when we wake up.'},
+  {lv:1, s:[['❄️','It snows'],['⛄','Make a snowman'],['☀️','The sun comes out'],['💧','It melts']], h:'You need snow to make a snowman.'},
+  {lv:1, s:[['🛒','Buy food'],['🍳','Cook it'],['🍽️','Eat'],['🧽','Wash up']], h:'We cook before we eat.'},
+  {lv:1, s:[['🛁','Bath time'],['🪥','Brush teeth'],['📖','Story time'],['😴','Sleep']], h:'We sleep at the very end of the day.'},
+  {lv:2, s:[['🌰','A seed'],['🌳','A tree grows'],['🍎','Apples grow'],['🥧','Apple pie']], h:'You need apples to make apple pie.'},
+  {lv:2, s:[['🧊','Ice'],['💧','It melts to water'],['☁️','Water goes up to a cloud'],['🌧️','Rain falls']], h:'Ice melts into water first.'},
+  {lv:2, s:[['✉️','Write a letter'],['📮','Post it'],['🚚','The truck takes it'],['📬','A friend gets it']], h:'You write the letter before you post it.'},
+  {lv:2, s:[['🧱','Bricks'],['🏗️','Build'],['🏠','A house'],['👨‍👩‍👧','A family moves in']], h:'You need to build the house first.'}
+];
+const SLOT_NAMES = {3: ['First', 'Next', 'Last'], 4: ['First', 'Next', 'Then', 'Last']};
+let SQ = null;
+function newSeq(){
+  stopAll(); begin('seq'); setHint(null);
+  const st = pick(SEQS.filter(s => s.lv === S.lv.seq && s !== SQ?.st));
+  const n = st.s.length;
+  SQ = {st, next: 0, n};
+  const sl = $('#seqSlots'); sl.innerHTML = ''; sl.style.setProperty('--n', n);
+  SQ.slots = st.s.map((_, i) => {
+    const d = document.createElement('div'); d.className = 'slot';
+    d.innerHTML = `<div class="slab">${i + 1}. ${SLOT_NAMES[n][i]}</div><div class="sbox"></div><div class="scap"></div>`;
+    sl.appendChild(d); return d;
+  });
+  const tray = $('#seqTray'); tray.innerHTML = '';
+  SQ.cards = shuffle(st.s.map((s, i) => ({s, i})));
+  SQ.cards.forEach((c, k) => {
+    const b = document.createElement('button'); b.className = 'scard';
+    b.innerHTML = `${c.s[0]}<small>${c.s[1]}</small>`; b.setAttribute('aria-label', c.s[1]);
+    b.onclick = () => seqTap(c);
+    c.el = b; tray.appendChild(b); enter(b, k * .07);
+  });
+  $('#seqAskWrap').hidden = false;
+  $('#seqAsk').innerHTML = 'What happens <b>first</b>? 👇';
+  guide('Put the story in order! What happens <b>first</b>?', `Let's put the story in order. We have: ${SQ.cards.map(c => c.s[1]).join(', ')}. What happens first?`);
+}
+function seqTap(c){
+  if (P.done || SQ.busy || c.el.classList.contains('used')) return;
+  if (c.i === SQ.next){
+    SQ.busy = true;
+    const slot = SQ.slots[SQ.next], box = slot.querySelector('.sbox');
+    flyTo(c.el, box, 420).then(() => {
+      box.textContent = c.s[0]; box.classList.add('filled'); slot.querySelector('.scap').textContent = c.s[1];
+      sfx.pop(); say(c.s[1]); SQ.busy = false;
+      SQ.next++;
+      if (SQ.next === SQ.n) seqRetell();
+      else { $('#seqAsk').innerHTML = `What happens <b>${SLOT_NAMES[SQ.n][SQ.next].toLowerCase()}</b>? 👇`; }
+    });
+    c.el.classList.add('used');
+  } else {
+    shakeEl(c.el);
+    const when = SQ.next === 0 ? 'first' : 'now';
+    notYet(`Can “${c.s[1]}” happen ${when}? ${SQ.st.h}`, `Hmm, can ${c.s[1]} happen ${when}? ${SQ.st.h.replace(/[😄]/g, '')}`);
+  }
+}
+async function seqRetell(){
+  $('#seqAskWrap').hidden = true;
+  const my = ++run, words = SLOT_NAMES[SQ.n];
+  guide("Now let's tell the story! 📖", false);
+  await sleep(500);
+  for (let i = 0; i < SQ.n; i++){
+    if (my !== run) return;
+    SQ.slots.forEach(s => s.classList.remove('lit')); SQ.slots[i].classList.add('lit');
+    say(`${words[i]}, ${SQ.st.s[i][1].toLowerCase()}.`);
+    await sleep(1900);
+  }
+  SQ.slots.forEach(s => s.classList.remove('lit'));
+  if (my !== run) return;
+  finish('seq', pick(['You thought about what has to happen first!', 'You put the story in order!', 'You told the whole story!']),
+    resHTML('Story in order! 📖', `<div class="res-rep">${SQ.st.s.map(s => s[0]).join(' → ')}</div><div class="next-q">Ask: "What do you think happens next?"</div>`));
+}
+function seqHelp(){
+  if (P.done) return;
+  const c = SQ.cards.find(x => x.i === SQ.next);
+  if (!c) return;
+  c.el.classList.add('glow');
+  guide(`Think: ${SQ.st.h}`);
+  setTimeout(() => c.el.classList.remove('glow'), 4000);
+}
+
+/* ================= CODE THE BUNNY (algorithms & debugging) ================= */
+const DIRS = {U:{dx:0,dy:-1,a:'↑',w:'up'}, D:{dx:0,dy:1,a:'↓',w:'down'}, L:{dx:-1,dy:0,a:'←',w:'left'}, R:{dx:1,dy:0,a:'→',w:'right'}};
+let CB = null;
+function cbBfs(N, s, g, rocks){
+  const key = (x, y) => y * N + x, blocked = new Set(rocks.map(([x, y]) => key(x, y)));
+  const prev = new Map([[key(...s), null]]), q = [s];
+  while (q.length){
+    const [x, y] = q.shift();
+    if (x === g[0] && y === g[1]) break;
+    for (const d of shuffle(Object.keys(DIRS))){
+      const nx = x + DIRS[d].dx, ny = y + DIRS[d].dy, k = key(nx, ny);
+      if (nx < 0 || ny < 0 || nx >= N || ny >= N || blocked.has(k) || prev.has(k)) continue;
+      prev.set(k, {from: [x, y], d}); q.push([nx, ny]);
+    }
+  }
+  if (!prev.has(key(...g))) return null;
+  const path = []; let cur = g;
+  while (cur[0] !== s[0] || cur[1] !== s[1]){ const p = prev.get(key(...cur)); path.unshift(p.d); cur = p.from; }
+  return path;
+}
+function cbGen(lv){
+  const N = lv === 0 ? 4 : 5, nR = lv === 0 ? rnd(0, 1) : lv === 1 ? rnd(2, 3) : rnd(4, 5);
+  const [dmin, dmax] = lv === 0 ? [2, 3] : lv === 1 ? [3, 5] : [5, 7];
+  for (let t = 0; t < 800; t++){
+    const cells = shuffle(Array.from({length: N * N}, (_, i) => [i % N, Math.floor(i / N)]));
+    const s = cells[0], g = cells[1], rocks = cells.slice(2, 2 + nR);
+    const path = cbBfs(N, s, g, rocks);
+    if (!path || path.length < dmin || path.length > dmax) continue;
+    const man = Math.abs(s[0] - g[0]) + Math.abs(s[1] - g[1]);
+    if (lv === 1 && (s[0] === g[0] || s[1] === g[1])) continue;     // needs a turn
+    if (lv === 2 && path.length < man + 2 && t < 650) continue;      // must plan around rocks
+    return {N, s, g, rocks, path};
+  }
+  return cbGen(Math.max(0, lv - 1));
+}
+const cellAt = ([x, y]) => CB.cells[y * CB.N + x];
+function moveBunny(pos, animate = true){
+  const b = CB.bunny, r1 = b.getBoundingClientRect();
+  cellAt(pos).appendChild(b);
+  if (animate && !reduceMotion && r1.width){
+    const r2 = b.getBoundingClientRect();
+    b.animate([{transform: `translate(${r1.left - r2.left}px,${r1.top - r2.top}px)`}, {transform: 'none'}], {duration: 320, easing: 'ease-out'});
+  }
+}
+function newCode(){
+  stopAll(); begin('code'); setHint(null);
+  CB = {...cbGen(S.lv.code), prog: [], running: false, bugAt: -1, helps: 0};
+  const b = $('#cbBoard'); b.innerHTML = ''; b.style.setProperty('--n', CB.N);
+  const isRock = (x, y) => CB.rocks.some(r => r[0] === x && r[1] === y);
+  CB.cells = [];
+  for (let y = 0; y < CB.N; y++) for (let x = 0; x < CB.N; x++){
+    const c = document.createElement('div'); c.className = 'bcell';
+    if (isRock(x, y)){ c.classList.add('rock'); c.innerHTML = '<span>🪨</span>'; }
+    if (x === CB.g[0] && y === CB.g[1]) c.innerHTML = '<span class="carrot">🥕</span>';
+    if (x === CB.s[0] && y === CB.s[1]) c.classList.add('home');
+    b.appendChild(c); CB.cells.push(c);
+  }
+  CB.bunny = document.createElement('span'); CB.bunny.className = 'bunny'; CB.bunny.textContent = '🐰';
+  cellAt(CB.s).appendChild(CB.bunny);
+  cbProgRender();
+  guide('Help the bunny get the 🥕! Make a <b>plan</b> with the arrows, then press <b>Go</b>.',
+        'Help the bunny get the carrot! Tap the arrows to make a plan, one step at a time. Then press Go!');
+  setHint(() => CB.prog.length ? $('#cbGo') : null, 9000);
+}
+function cbProgRender(){
+  const p = $('#cbProg'); p.innerHTML = '';
+  CB.prog.forEach((d, i) => {
+    const c = document.createElement('button'); c.className = 'pcard' + (CB.bugAt === i ? ' bug' : '');
+    c.textContent = DIRS[d].a; c.setAttribute('aria-label', `step ${i + 1}, ${DIRS[d].w}. Tap to take it away`);
+    c.onclick = () => { if (CB.running || P.done) return; CB.prog.splice(i, 1); CB.bugAt = -1; sfx.pop(); say('Taken away'); cbProgRender(); };
+    p.appendChild(c);
+  });
+}
+$$('.arw').forEach(a => a.onclick = () => {
+  if (!CB || CB.running || P.done) return;
+  if (CB.prog.length >= 12){ guide('That is a long plan! Press <b>Go</b> to try it.'); return; }
+  CB.prog.push(a.dataset.d); CB.bugAt = -1; sfx.pop(); say(DIRS[a.dataset.d].w); cbProgRender();
+  bounce($('#cbProg').lastElementChild);
+});
+$('#cbUndo').onclick = () => { if (!CB || CB.running || P.done || !CB.prog.length) return; CB.prog.pop(); CB.bugAt = -1; sfx.pop(); cbProgRender(); };
+$('#cbGo').onclick = cbRun;
+async function cbRun(){
+  if (!CB || CB.running || P.done) return;
+  if (!CB.prog.length){ guide('First, tap the <b>arrows</b> to make a plan! ↑ ↓ ← →', 'First, tap the arrows to make a plan!'); return; }
+  CB.running = true; CB.bugAt = -1; cbProgRender();
+  const my = ++run; let [x, y] = CB.s;
+  moveBunny(CB.s, false);
+  const cards = [...$('#cbProg').children];
+  for (let i = 0; i < CB.prog.length; i++){
+    cards.forEach(c => c.classList.remove('now')); cards[i].classList.add('now');
+    say(DIRS[CB.prog[i]].w);
+    await sleep(420); if (my !== run) return;
+    const nx = x + DIRS[CB.prog[i]].dx, ny = y + DIRS[CB.prog[i]].dy;
+    const off = nx < 0 || ny < 0 || nx >= CB.N || ny >= CB.N, rock = !off && CB.rocks.some(r => r[0] === nx && r[1] === ny);
+    if (off || rock){
+      sfx.bump();
+      if (!reduceMotion) CB.bunny.animate([{transform: 'none'}, {transform: `translate(${DIRS[CB.prog[i]].dx * 14}px,${DIRS[CB.prog[i]].dy * 14}px) rotate(12deg)`}, {transform: 'none'}], {duration: 380});
+      CB.bugAt = i; cbProgRender();
+      notYet(`Bump! 🐞 Step <b>${i + 1}</b> has a bug. Tap it to take it away, then fix your plan.`,
+             `Bump! The bunny bumped into ${off ? 'the edge' : 'a rock'} on step ${i + 1}. That's a bug! Bugs are normal. Tap that arrow to take it away, and fix your plan.`);
+      await sleep(1500); if (my !== run) return;
+      moveBunny(CB.s); CB.running = false; return;
+    }
+    x = nx; y = ny; moveBunny([x, y]); sfx.pop();
+    if (x === CB.g[0] && y === CB.g[1]){
+      await sleep(350);
+      cellAt(CB.g).querySelector('.carrot').style.opacity = 0; CB.bunny.textContent = '😋'; CB.bunny.classList.add('yum');
+      cards.forEach(c => c.classList.remove('now'));
+      const plan = CB.prog.slice(0, i + 1);
+      finish('code', pick(['You planned every step!', 'Your plan worked, step by step!', 'Great planning!']),
+        resHTML('Yum! The bunny got the carrot! 🥕', `<div class="plan-show">${plan.map(d => `<span class="pcard">${DIRS[d].a}</span>`).join('')}</div><div class="next-q">Ask: "Is there another way the bunny could go?"</div>`));
+      return;
+    }
+    await sleep(260);
+  }
+  cards.forEach(c => c.classList.remove('now'));
+  notYet('The bunny stopped. It needs <b>more steps</b> to reach the 🥕!', 'The bunny stopped before the carrot. Your plan needs more steps!');
+  await sleep(1700); if (my !== run) return;
+  moveBunny(CB.s); CB.running = false;
+}
+function cbHelp(){
+  if (!CB || CB.running || P.done) return;
+  CB.helps++;
+  CB.cells.forEach(c => c.querySelector('.foot')?.remove());
+  if (CB.helps >= 3){
+    CB.prog = [...CB.path]; CB.bugAt = -1; cbProgRender();
+    guide("Let's make the plan together! Now press <b>Go</b>.", "Let's make the plan together. Here it is! Now press Go.");
+    return;
+  }
+  const steps = CB.helps === 1 ? Math.ceil(CB.path.length / 2) : CB.path.length;
+  let [x, y] = CB.s;
+  for (let i = 0; i < steps; i++){
+    x += DIRS[CB.path[i]].dx; y += DIRS[CB.path[i]].dy;
+    if (x === CB.g[0] && y === CB.g[1]) break;
+    cellAt([x, y]).insertAdjacentHTML('afterbegin', '<span class="foot">🐾</span>');
+  }
+  guide(CB.helps === 1 ? 'Follow the <b>paw prints</b> 🐾 for the first steps!' : 'Here is the whole path 🐾. Count the steps for your plan!');
+}
+
+/* ================= BIG QUESTIONS (Philosophy for Children) ================= */
+const TALK = [
+  {e:'🤖', q:'Is a robot alive?', w:'What makes something alive? Does it eat, grow, or breathe?'},
+  {e:'🍪', q:'You have 3 cookies. Your friend has 1. Is that fair?', w:'What could you do to make it fair?'},
+  {e:'😠', q:'Is it okay to feel angry?', w:'What can you do when you feel angry?'},
+  {e:'🐜', q:'Is a tiny ant as important as a big elephant?', w:'What if there were no ants at all?'},
+  {e:'🦁', q:'Can you be brave and scared at the same time?', w:'When did you feel a little scared, but you did it anyway?'},
+  {e:'🖍️', q:'Is making a mistake a bad thing?', w:'What did you learn from a mistake you made?'},
+  {e:'🐶', q:'Can a dog be your best friend?', w:'What makes someone a good friend?'},
+  {e:'🌙', q:'Is the moon following our car?', w:'How could we find out?'},
+  {e:'🧩', q:'Is a puzzle more fun when it is a little bit hard?', w:'How do you feel when you finish a hard one?'},
+  {e:'👑', q:'If you were king or queen for a day, would you make a new rule?', w:'Would your rule be fair for everyone?'},
+  {e:'💭', q:'Are dreams real?', w:'How do you know when you are awake?'},
+  {e:'🎁', q:'Is giving a present as fun as getting one?', w:'How does it feel when someone loves your present?'},
+  {e:'🌧️', q:'Is rain good?', w:'Who might be happy when it rains? Who might be sad?'},
+  {e:'🐢', q:'Is it better to be fast, or to be careful?', w:'When is it good to go slow?'}
+];
+const STARTERS = [{i:'💬', t:'I think… because…'}, {i:'👍', t:'I agree, because…'}, {i:'✋', t:'I disagree, because…'}, {i:'🤔', t:"I'm not sure. Maybe…"}, {i:'🔄', t:'I changed my mind, because…'}];
+let TK = null;
+function newTalk(){
+  stopAll(); begin('talk'); setHint(null);
+  const t = pick(TALK.filter(x => x !== TK?.t));
+  TK = {t, voted: false};
+  $('#talkPic').textContent = t.e; $('#talkQ').textContent = t.q; enter($('#talkPic'));
+  $$('#talkVotes .vote').forEach(v => v.classList.remove('chosen'));
+  $('#talkMore').hidden = true;
+  guide('A <b>big question</b>! What do you think?', `Here's a big question. ${t.q} What do you think? Yes, no, or not sure?`);
+}
+$$('#talkVotes .vote').forEach(v => v.onclick = () => {
+  if (!TK) return;
+  $$('#talkVotes .vote').forEach(x => x.classList.toggle('chosen', x === v)); sfx.chime();
+  const first = !TK.voted; TK.voted = true;
+  $('#talkMore').hidden = false;
+  $('#talkWhatIf').innerHTML = `🤔 <b>And then:</b> ${TK.t.w}`;
+  if (first){
+    reasonChips($('#talkStarters'), STARTERS, r => say(r.t.replace(/…/g, '')));
+    $('#talkMore').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  }
+  guide(first ? 'Interesting! <b>Why</b> do you think so? Tell your grown-up.' : 'You changed your mind! That is great thinking. <b>Why?</b>',
+        first ? 'Interesting! Why do you think so? Tell your grown-up your reason.' : 'You changed your mind! Good thinkers do that. Why did you change?');
+});
+$('#talkDone').onclick = () => {
+  if (!TK || P.done) return;
+  P.done = true; S.talks++; save();
+  win('talk', 'Great thinking and talking!');
+  guide('<b>You gave reasons and listened.</b> That is how thinkers talk!', 'You gave reasons and listened. That is how great thinkers talk!');
+  $('#talkMore').hidden = true;
+  $('#talkNext').hidden = false; $('#talkNext').textContent = '▶ Another question';
+};
+
+/* ================= CALM BREATH ================= */
+let calmTok = 0;
+async function openCalm(){
+  stopAll(); $('#calm').hidden = false;
+  const tok = ++calmTok, c = $('#bCircle'), t = $('#bText');
+  c.classList.remove('in');
+  for (let i = 0; i < 3; i++){
+    if (tok !== calmTok) return;
+    c.textContent = '🌸'; t.textContent = 'Smell the flower… breathe in'; say('Smell the flower. Breathe in.');
+    c.classList.add('in'); await sleep(4200); if (tok !== calmTok) return;
+    c.textContent = '🕯️'; t.textContent = 'Blow out the candle… breathe out'; say('Blow out the candle. Breathe out.');
+    c.classList.remove('in'); await sleep(4200);
+  }
+  if (tok !== calmTok) return;
+  c.textContent = '💪'; t.textContent = 'Calm body, ready brain!'; say('Calm body, ready brain! You can do it.');
+}
+function closeCalm(){
+  calmTok++; $('#calm').hidden = true; if ('speechSynthesis' in window) speechSynthesis.cancel();
+  if (current !== 'home' && !P.done) guide('Ready? Let\'s try again. You can do hard things! 💪');
+}
+$('#calmDone').onclick = closeCalm;
+$('#calmHome').onclick = openCalm;
+
+/* ================= wiring ================= */
+const NEW = {grid: newGrid, odd: newOdd, sort: newSort, pat: newPat, seq: newSeq, code: newCode, talk: newTalk};
+const HELP = {grid: gridHelp, odd: oddHelp, sort: sortHelp, pat: () => patHelp(false), seq: seqHelp, code: cbHelp, talk: () => {}};
+KEYS.forEach(k => {
+  $(`#${k}Next`).onclick = () => NEW[k]();
+  $(`#${k}Help`).onclick = () => { if (P.done) return; P.helped = true; HELP[k](); };
+  $(`#${k}Calm`).onclick = openCalm;
+  $(`#${k}Hard`).onclick = () => {
+    S.lv[k] = Math.min(2, S.lv[k] + 1); S.streak[k] = 0; S.brave++; save();
+    popPraise('🦁 Brave choice!'); sfx.chime();
+    say('Brave choice! Tricky puzzles help your brain grow.');
+    const r = run; setTimeout(() => { if (r === run && current === k) NEW[k](); }, 2400);
+  };
+});
+$('#sortB0').onclick = () => sortTap(0);
+$('#sortB1').onclick = () => sortTap(1);
+
+const SCREENS = {
+  home: {theme: 't-talk'},
+  grid: {title: 'Animal Houses', sym: '🏡', theme: 't-grid'}, odd: {title: 'Odd One Out', sym: '🤔', theme: 't-odd'},
+  sort: {title: 'Sort It', sym: '🧺', theme: 't-sort'}, pat: {title: 'Patterns', sym: '🔁', theme: 't-pat'},
+  seq: {title: 'What First?', sym: '🐣', theme: 't-seq'}, code: {title: 'Code the Bunny', sym: '🐰', theme: 't-code'},
+  talk: {title: 'Big Questions', sym: '💬', theme: 't-talk'}
+};
+function go(id){
+  stopAll(); setHint(null);
+  current = id;
+  const cfg = SCREENS[id], home = id === 'home';
+  document.body.className = cfg.theme;
+  $$('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+  $('#homeBtn').hidden = home; $('#titlePill').hidden = home; $('#brand').hidden = !home; $('#gearBtn').hidden = !home;
+  $('#stars').hidden = !home || !S.rewards;
+  if (!home){ $('#titleSym').textContent = cfg.sym; $('#titleText').textContent = cfg.title; }
+  flowersRender(); window.scrollTo({top: 0});
+  if (home){ stickersRender(); treeRender(); guide("Hi! I'm <b>Ollie</b>. Let's <b>think</b> together!", "Hi friend! I'm Ollie the owl. What shall we think about today?"); return; }
+  NEW[id]();
+}
+$('#homeBtn').onclick = () => go('home');
+$$('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
+$('#soundBtn').onclick = () => {
+  soundOn = !soundOn; $('#soundBtn').textContent = soundOn ? '🔊' : '🔇';
+  if (!soundOn && 'speechSynthesis' in window) speechSynthesis.cancel(); else say('Sound on!');
+};
+
+/* ================= grown-up settings ================= */
+let tmpAge = S.age;
+function ageRender(){ $$('#ageSeg button').forEach(b => b.classList.toggle('active', +b.dataset.v === tmpAge)); }
+$$('#ageSeg button').forEach(b => b.onclick = () => { tmpAge = +b.dataset.v; ageRender(); });
+function resetArm(on){ const b = $('#resetBtn'); b.dataset.armed = on ? '1' : ''; b.textContent = on ? '⚠️ Tap again to reset' : '↺ Reset progress'; b.classList.toggle('armed', on); }
+let resetTimer = null;
+$('#resetBtn').onclick = () => {
+  clearTimeout(resetTimer);
+  if ($('#resetBtn').dataset.armed){
+    Object.assign(S, {stars: 0, stickers: [], solved: 0, bounce: 0, brave: 0, talks: 0, streak: {}, missRun: {}});
+    KEYS.forEach(k => { S.prog[k] = 0; S.lv[k] = ageLv(S.age); }); save();
+    $('#starCount').textContent = 0; stickersRender(); treeRender();
+    resetArm(false); $('#resetBtn').textContent = '✓ Reset done';
+    resetTimer = setTimeout(() => resetArm(false), 2000);
+  } else { resetArm(true); resetTimer = setTimeout(() => resetArm(false), 3000); }
+};
+$('#gearBtn').onclick = () => { stopAll(); tmpAge = S.age; ageRender(); $('#rewardsToggle').checked = S.rewards; resetArm(false); $('#settings').hidden = false; };
+const closeSettings = () => { $('#settings').hidden = true; };
+$('#settingsClose').onclick = closeSettings;
+$('#settings').addEventListener('click', e => { if (e.target.id === 'settings') closeSettings(); });
+$('#settingsOk').onclick = () => {
+  if (tmpAge !== S.age){ S.age = tmpAge; KEYS.forEach(k => { S.lv[k] = ageLv(S.age); S.streak[k] = 0; S.missRun[k] = 0; }); }
+  S.rewards = $('#rewardsToggle').checked; save();
+  closeSettings(); $('#stars').hidden = !S.rewards; stickersRender();
+};
+
+/* ================= start ================= */
+stickersRender(); treeRender();
+guide("Hi! I'm <b>Ollie</b>. Let's <b>think</b> together!", false);
+</script>
